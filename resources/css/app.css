@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans: Instrument Sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+@layer utilities {
+    body,
+    html {
+        --font-sans:
+            'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    }
+}
+
+:root {
+    --background: #f6ede6;
+    --foreground: #22223b;
+    --card: #fff8f0;
+    --card-foreground: #22223b;
+    --popover: #fff8f0;
+    --popover-foreground: #22223b;
+    --primary: #22223b;
+    --primary-foreground: #fff8f0;
+    --secondary: #f2e9e4;
+    --secondary-foreground: #22223b;
+    --muted: #e9ecef;
+    --muted-foreground: #6c757d;
+    --accent: #f6c177;
+    --accent-foreground: #22223b;
+    --destructive: #c92a2a;
+    --destructive-foreground: #fff8f0;
+    --border: #000000;
+    --input: #e0cfc2;
+    --ring: #f6c177;
+    --chart-1: #f6c177;
+    --chart-2: #9a8c98;
+    --chart-3: #4a4e69;
+    --chart-4: #c9ada7;
+    --chart-5: #f2e9e4;
+    --radius: 0.3125rem;
+    --sidebar-background: #fff8f0;
+    --sidebar-foreground: #22223b;
+    --sidebar-primary: #22223b;
+    --sidebar-primary-foreground: #fff8f0;
+    --sidebar-accent: #f6c177;
+    --sidebar-accent-foreground: #22223b;
+    --sidebar-border: #e0cfc2;
+    --sidebar-ring: #f6c177;
+    --sidebar: #fff8f0;
+    
+    /* Neobrutalism specific variables */
+    --box-shadow-x: 4px;
+    --box-shadow-y: 4px;
+    --reverse-box-shadow-x: -4px;
+    --reverse-box-shadow-y: -4px;
+}
+
+.dark {
+    --background: #1a1a2e;
+    --foreground: #f6ede6;
+    --card: #22223b;
+    --card-foreground: #f6ede6;
+    --popover: #22223b;
+    --popover-foreground: #f6ede6;
+    --primary: #f6c177;
+    --primary-foreground: #1a1a2e;
+    --secondary: #4a4e69;
+    --secondary-foreground: #f6ede6;
+    --muted: #4a4e69;
+    --muted-foreground: #9a8c98;
+    --accent: #f6c177;
+    --accent-foreground: #1a1a2e;
+    --destructive: #e74c3c;
+    --destructive-foreground: #f6ede6;
+    --border: #000000;
+    --input: #4a4e69;
+    --ring: #f6c177;
+    --chart-1: #f6c177;
+    --chart-2: #9a8c98;
+    --chart-3: #c9ada7;
+    --chart-4: #f2e9e4;
+    --chart-5: #e0cfc2;
+    --radius: 0.3125rem;
+    --sidebar-background: #22223b;
+    --sidebar-foreground: #f6ede6;
+    --sidebar-primary: #f6c177;
+    --sidebar-primary-foreground: #1a1a2e;
+    --sidebar-accent: #f6c177;
+    --sidebar-accent-foreground: #1a1a2e;
+    --sidebar-border: #4a4e69;
+    --sidebar-ring: #f6c177;
+    --sidebar: #22223b;
+    
+    /* Neobrutalism specific variables */
+    --box-shadow-x: 4px;
+    --box-shadow-y: 4px;
+    --reverse-box-shadow-x: -4px;
+    --reverse-box-shadow-y: -4px;
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
