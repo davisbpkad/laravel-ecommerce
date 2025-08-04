@@ -13,23 +13,26 @@ import { Head, Link } from '@inertiajs/vue3';
                 <Link
                     v-if="$page.props.auth.user"
                     :href="route('dashboard')"
-                    class="inline-block rounded-md border-2 border-[#FFD6E0] px-6 py-2 text-base font-bold 
-                    text-[#1b1b18] shadow-[4px_4px_0_#FFB800] transition hover:shadow-[6px_6px_0_#FFB800]"
+                    class="inline-block rounded-md border-2 border-[#44403c] px-6 py-2 text-base font-bold 
+                    text-[#1b1b18]  shadow-[4px_4px_0_#44403c] transition hover:shadow-[6px_6px_0_#44403c]
+                    hover:translate-x-[-2px] hover:shadow-none"
                 >
                     Dashboard
                 </Link>
                 <template v-else>
                     <Link
                         :href="route('login')"
-                        class="inline-block rounded-md border-2 border-[#FFD6E0] bg-[#F7F7F7] px-6 py-2 text-base font-bold 
-                        text-[#1b1b18] shadow-[4px_4px_0_#FFB800] transition hover:shadow-[6px_6px_0_#FFB800]"
+                        class="inline-block rounded-md border-2 border-[#44403c] px-6 py-2 text-base font-bold 
+                        text-[#1b1b18]  shadow-[4px_4px_0_#44403c] transition hover:shadow-[6px_6px_0_#44403c]
+                        hover:translate-x-[-2px] hover:shadow-none"
                     >
                         Log in
                     </Link>
                     <Link
                         :href="route('register')"
-                        class="inline-block rounded-md border-2 border-[#FFD6E0] bg-[#F7F7F7] px-6 py-2 text-base font-bold 
-                        text-[#1b1b18] shadow-[4px_4px_0_#FFB800] transition hover:shadow-[6px_6px_0_#FFB800]"
+                        class="inline-block rounded-md border-2 border-[#44403c] px-6 py-2 text-base font-bold 
+                        text-[#1b1b18]  shadow-[4px_4px_0_#44403c] transition hover:shadow-[6px_6px_0_#44403c]
+                        hover:translate-x-[-2px]  hover:shadow-none"
                     >
                         Register
                     </Link>
