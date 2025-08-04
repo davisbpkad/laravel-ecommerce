@@ -82,12 +82,52 @@
           </form>
         </div>
 
+        <!-- Bulk Actions -->
+        <div v-if="selectedProducts.length > 0" class="bg-primary/10 border-2 border-primary rounded-[5px] p-4 mb-6">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-primary">
+              {{ selectedProducts.length }} product(s) selected
+            </span>
+            <div class="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                @click="bulkToggleStatus"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Toggle Status
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                @click="confirmBulkDelete"
+                :disabled="isDeleting"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {{ isDeleting ? 'Deleting...' : `Delete (${selectedProducts.length})` }}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <!-- Products Table -->
         <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-background border-b-2 border-border">
                 <tr>
+                  <th class="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                    <input 
+                      type="checkbox"
+                      :checked="isAllSelected"
+                      @change="toggleSelectAll"
+                      class="rounded border-border text-primary focus:ring-primary"
+                    />
+                  </th>
                   <th class="px-6 py-4 text-left text-sm font-semibold text-foreground">Product</th>
                   <th class="px-6 py-4 text-left text-sm font-semibold text-foreground">SKU</th>
                   <th class="px-6 py-4 text-left text-sm font-semibold text-foreground">Category</th>
@@ -99,11 +139,21 @@
               </thead>
               <tbody class="divide-y divide-border">
                 <tr v-if="products.data.length === 0">
-                  <td colspan="7" class="px-6 py-8 text-center text-muted-foreground">
+                  <td colspan="8" class="px-6 py-8 text-center text-muted-foreground">
                     No products found
                   </td>
                 </tr>
                 <tr v-else v-for="product in products.data" :key="product.id" class="hover:bg-background/50">
+                  <!-- Checkbox -->
+                  <td class="px-6 py-4">
+                    <input 
+                      type="checkbox"
+                      :value="product.id"
+                      v-model="selectedProducts"
+                      class="rounded border-border text-primary focus:ring-primary"
+                    />
+                  </td>
+                  
                   <!-- Product Info -->
                   <td class="px-6 py-4">
                     <div class="flex items-center space-x-3">
@@ -225,7 +275,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
@@ -275,6 +325,15 @@ const filters = ref({
   status: props.filters.status || ''
 })
 
+// Multiple selection state
+const selectedProducts = ref<number[]>([])
+const isDeleting = ref(false)
+
+// Computed properties
+const isAllSelected = computed(() => {
+  return props.products.data.length > 0 && selectedProducts.value.length === props.products.data.length
+})
+
 // Methods
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('id-ID').format(amount)
@@ -287,6 +346,7 @@ const getStockClass = (stock: number): string => {
 }
 
 const search = () => {
+  selectedProducts.value = []
   router.get('/admin/products', filters.value, {
     preserveState: true,
     preserveScroll: false,
@@ -300,6 +360,7 @@ const clearFilters = () => {
     category: '',
     status: ''
   }
+  selectedProducts.value = []
   
   // Redirect to admin products without any filters
   router.get('/admin/products', {}, {
@@ -307,6 +368,70 @@ const clearFilters = () => {
     preserveScroll: false,
     replace: true
   })
+}
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedProducts.value = []
+  } else {
+    selectedProducts.value = props.products.data.map(product => product.id)
+  }
+}
+
+const confirmBulkDelete = () => {
+  if (selectedProducts.value.length === 0) return
+  
+  const confirmMessage = `Are you sure you want to delete ${selectedProducts.value.length} product(s)? This action cannot be undone.`
+  
+  if (confirm(confirmMessage)) {
+    bulkDeleteProducts()
+  }
+}
+
+const bulkDeleteProducts = async () => {
+  if (selectedProducts.value.length === 0) return
+  
+  isDeleting.value = true
+  
+  try {
+    await router.post('/admin/products/bulk-delete', {
+      product_ids: selectedProducts.value
+    }, {
+      onSuccess: () => {
+        selectedProducts.value = []
+      },
+      onError: (errors) => {
+        console.error('Error deleting products:', errors)
+        alert('Error deleting some products. Please try again.')
+      }
+    })
+  } catch (error) {
+    console.error('Error deleting products:', error)
+    alert('Error deleting products. Please try again.')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+const bulkToggleStatus = async () => {
+  if (selectedProducts.value.length === 0) return
+  
+  try {
+    await router.post('/admin/products/bulk-toggle-status', {
+      product_ids: selectedProducts.value
+    }, {
+      onSuccess: () => {
+        selectedProducts.value = []
+      },
+      onError: (errors) => {
+        console.error('Error toggling product status:', errors)
+        alert('Error updating some products. Please try again.')
+      }
+    })
+  } catch (error) {
+    console.error('Error toggling product status:', error)
+    alert('Error updating products. Please try again.')
+  }
 }
 
 const deleteProduct = async (productId: number, productName: string) => {

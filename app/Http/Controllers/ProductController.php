@@ -204,4 +204,84 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')
             ->with('success', 'Product deleted successfully.');
     }
+
+    /**
+     * Bulk delete multiple products
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer|exists:products,id',
+        ]);
+
+        try {
+            $productIds = $validated['product_ids'];
+            $products = Product::whereIn('id', $productIds)->get();
+            
+            if ($products->isEmpty()) {
+                return redirect()->route('admin.products.index')
+                    ->with('error', 'No products found to delete.');
+            }
+
+            $deletedCount = 0;
+            
+            foreach ($products as $product) {
+                // Delete associated image if it exists
+                if ($product->image) {
+                    $imagePath = str_replace('/storage/', '', $product->image);
+                    Storage::disk('public')->delete($imagePath);
+                }
+                
+                $product->delete();
+                $deletedCount++;
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Successfully deleted {$deletedCount} product(s).");
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk delete error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'An error occurred while deleting products. Please try again.');
+        }
+    }
+
+    /**
+     * Bulk toggle status for multiple products
+     */
+    public function bulkToggleStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer|exists:products,id',
+        ]);
+
+        try {
+            $productIds = $validated['product_ids'];
+            $products = Product::whereIn('id', $productIds)->get();
+            
+            if ($products->isEmpty()) {
+                return redirect()->route('admin.products.index')
+                    ->with('error', 'No products found to update.');
+            }
+
+            $updatedCount = 0;
+            
+            foreach ($products as $product) {
+                $product->update(['is_active' => !$product->is_active]);
+                $updatedCount++;
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Successfully updated {$updatedCount} product(s) status.");
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk toggle status error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'An error occurred while updating product status. Please try again.');
+        }
+    }
 }
