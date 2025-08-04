@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="Manage Products">
+  <AdminLayout :title="showDeleted ? 'Deleted Products' : 'Manage Products'">
     <div class="min-h-screen bg-background">
       <!-- Header -->
       <div class="bg-card border-b-2 border-border">
@@ -59,6 +59,20 @@
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+
+            <!-- Show Deleted Toggle -->
+            <div>
+              <label class="block text-sm font-medium text-card-foreground mb-2">View</label>
+              <label class="flex items-center space-x-2 cursor-pointer px-3 py-2 border-2 border-border rounded-[5px] bg-background">
+                <input
+                  v-model="showDeleted"
+                  @change="toggleDeletedView"
+                  type="checkbox"
+                  class="rounded border-border text-primary focus:ring-primary"
+                />
+                <span class="text-sm text-foreground">Show Deleted</span>
+              </label>
+            </div>
             
             <div class="flex items-end gap-2">
               <Button type="submit" class="flex-1">
@@ -89,27 +103,55 @@
               {{ selectedProducts.length }} product(s) selected
             </span>
             <div class="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                @click="bulkToggleStatus"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                Toggle Status
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                @click="confirmBulkDelete"
-                :disabled="isDeleting"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                {{ isDeleting ? 'Deleting...' : `Delete (${selectedProducts.length})` }}
-              </Button>
+              <!-- Actions for non-deleted products -->
+              <template v-if="!showDeleted">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  @click="bulkToggleStatus"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  Toggle Status
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  @click="confirmBulkDelete"
+                  :disabled="isDeleting"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {{ isDeleting ? 'Moving to Trash...' : `Move to Trash (${selectedProducts.length})` }}
+                </Button>
+              </template>
+              
+              <!-- Actions for deleted products -->
+              <template v-else>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  @click="bulkRestoreProducts"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  Restore ({{ selectedProducts.length }})
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  @click="confirmBulkDelete"
+                  :disabled="isDeleting"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {{ isDeleting ? 'Permanently Deleting...' : `Permanently Delete (${selectedProducts.length})` }}
+                </Button>
+              </template>
             </div>
           </div>
         </div>
@@ -143,7 +185,15 @@
                     No products found
                   </td>
                 </tr>
-                <tr v-else v-for="product in products.data" :key="product.id" class="hover:bg-background/50">
+                <tr 
+                  v-else 
+                  v-for="product in products.data" 
+                  :key="product.id" 
+                  :class="[
+                    'hover:bg-background/50',
+                    showDeleted ? 'bg-red-50 text-gray-500' : ''
+                  ]"
+                >
                   <!-- Checkbox -->
                   <td class="px-6 py-4">
                     <input 
@@ -163,7 +213,12 @@
                         class="w-12 h-12 object-cover rounded-[5px] border border-border"
                       />
                       <div>
-                        <div class="font-medium text-card-foreground line-clamp-1">{{ product.name }}</div>
+                        <div class="font-medium text-card-foreground line-clamp-1 flex items-center gap-2">
+                          {{ product.name }}
+                          <span v-if="showDeleted" class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                            DELETED
+                          </span>
+                        </div>
                         <div class="text-sm text-muted-foreground line-clamp-1">{{ product.description }}</div>
                       </div>
                     </div>
@@ -201,32 +256,60 @@
                   <!-- Actions -->
                   <td class="px-6 py-4">
                     <div class="flex items-center space-x-2">
-                      <Link :href="`/products/${product.id}`" target="_blank">
-                        <Button variant="outline" size="sm">
+                      <!-- Actions for non-deleted products -->
+                      <template v-if="!showDeleted">
+                        <Link :href="`/products/${product.id}`" target="_blank">
+                          <Button variant="outline" size="sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </Button>
+                        </Link>
+                        
+                        <Link :href="`/admin/products/${product.id}/edit`">
+                          <Button variant="outline" size="sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </Button>
+                        </Link>
+                        
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          @click="deleteProduct(product.id, product.name)"
+                        >
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </Button>
-                      </Link>
+                      </template>
                       
-                      <Link :href="`/admin/products/${product.id}/edit`">
-                        <Button variant="outline" size="sm">
+                      <!-- Actions for deleted products -->
+                      <template v-else>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          @click="restoreProduct(product.id, product.name)"
+                        >
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                           </svg>
+                          Restore
                         </Button>
-                      </Link>
-                      
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        @click="deleteProduct(product.id, product.name)"
-                      >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </Button>
+                        
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          @click="permanentDeleteProduct(product.id, product.name)"
+                        >
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Permanent Delete
+                        </Button>
+                      </template>
                     </div>
                   </td>
                 </tr>
@@ -280,6 +363,7 @@ import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
 import { Link } from '@inertiajs/vue3'
+import { useNotifications } from '@/composables/useNotifications'
 
 // Define interfaces
 interface Product {
@@ -309,6 +393,7 @@ interface PageProps {
     search: string
     category: string
     status: string
+    show_deleted?: boolean
   }
   auth: {
     user: any
@@ -328,6 +413,8 @@ const filters = ref({
 // Multiple selection state
 const selectedProducts = ref<number[]>([])
 const isDeleting = ref(false)
+const showDeleted = ref(props.filters.show_deleted || false)
+const { success, error } = useNotifications()
 
 // Computed properties
 const isAllSelected = computed(() => {
@@ -361,9 +448,23 @@ const clearFilters = () => {
     status: ''
   }
   selectedProducts.value = []
+  showDeleted.value = false
   
   // Redirect to admin products without any filters
   router.get('/admin/products', {}, {
+    preserveState: true,
+    preserveScroll: false,
+    replace: true
+  })
+}
+
+const toggleDeletedView = () => {
+  selectedProducts.value = []
+  const params = showDeleted.value 
+    ? { ...filters.value, show_deleted: true }
+    : filters.value
+    
+  router.get('/admin/products', params, {
     preserveState: true,
     preserveScroll: false,
     replace: true
@@ -381,10 +482,71 @@ const toggleSelectAll = () => {
 const confirmBulkDelete = () => {
   if (selectedProducts.value.length === 0) return
   
-  const confirmMessage = `Are you sure you want to delete ${selectedProducts.value.length} product(s)? This action cannot be undone.`
+  if (showDeleted.value) {
+    // If viewing deleted products, show permanent delete confirmation
+    const confirmMessage = `Are you sure you want to permanently delete ${selectedProducts.value.length} product(s)? This action cannot be undone!`
+    
+    if (confirm(confirmMessage)) {
+      bulkPermanentDeleteProducts()
+    }
+  } else {
+    // Normal soft delete
+    const confirmMessage = `Are you sure you want to delete ${selectedProducts.value.length} product(s)? They will be moved to trash.`
+    
+    if (confirm(confirmMessage)) {
+      bulkDeleteProducts()
+    }
+  }
+}
+
+const bulkRestoreProducts = async () => {
+  if (selectedProducts.value.length === 0) return
   
-  if (confirm(confirmMessage)) {
-    bulkDeleteProducts()
+  const selectedCount = selectedProducts.value.length
+  
+  try {
+    await router.post('/admin/products/bulk-restore', {
+      product_ids: selectedProducts.value
+    }, {
+      onSuccess: () => {
+        selectedProducts.value = []
+        success(`Successfully restored ${selectedCount} product(s)`, 'Bulk Restore')
+      },
+      onError: (errors) => {
+        console.error('Error restoring products:', errors)
+        error('Failed to restore some products. Please try again.', 'Bulk Restore Error')
+      }
+    })
+  } catch (err) {
+    console.error('Error restoring products:', err)
+    error('An unexpected error occurred. Please try again.', 'Bulk Restore Error')
+  }
+}
+
+const bulkPermanentDeleteProducts = async () => {
+  if (selectedProducts.value.length === 0) return
+  
+  isDeleting.value = true
+  const selectedCount = selectedProducts.value.length
+  
+  try {
+    await router.post('/admin/products/bulk-force-delete', {
+      product_ids: selectedProducts.value
+    }, {
+      onSuccess: () => {
+        selectedProducts.value = []
+        success(`Successfully permanently deleted ${selectedCount} product(s)`, 'Bulk Permanent Delete')
+      },
+      onError: (errors) => {
+        console.error('Error permanently deleting products:', errors)
+        error('Failed to permanently delete some products. Please try again.', 'Bulk Permanent Delete Error')
+      }
+    })
+  } catch (err) {
+    console.error('Error permanently deleting products:', err)
+    error('An unexpected error occurred. Please try again.', 'Bulk Permanent Delete Error')
+  } finally {
+    isDeleting.value = false
   }
 }
 
@@ -399,15 +561,16 @@ const bulkDeleteProducts = async () => {
     }, {
       onSuccess: () => {
         selectedProducts.value = []
+        success(`Successfully deleted ${selectedProducts.value.length} product(s)`, 'Bulk Delete')
       },
       onError: (errors) => {
         console.error('Error deleting products:', errors)
-        alert('Error deleting some products. Please try again.')
+        error('Failed to delete some products. Please try again.', 'Bulk Delete Error')
       }
     })
-  } catch (error) {
-    console.error('Error deleting products:', error)
-    alert('Error deleting products. Please try again.')
+  } catch (err) {
+    console.error('Error deleting products:', err)
+    error('An unexpected error occurred. Please try again.', 'Bulk Delete Error')
   } finally {
     isDeleting.value = false
   }
@@ -416,37 +579,83 @@ const bulkDeleteProducts = async () => {
 const bulkToggleStatus = async () => {
   if (selectedProducts.value.length === 0) return
   
+  const selectedCount = selectedProducts.value.length
+  
   try {
     await router.post('/admin/products/bulk-toggle-status', {
       product_ids: selectedProducts.value
     }, {
       onSuccess: () => {
         selectedProducts.value = []
+        success(`Successfully updated status for ${selectedCount} product(s)`, 'Bulk Status Update')
       },
       onError: (errors) => {
         console.error('Error toggling product status:', errors)
-        alert('Error updating some products. Please try again.')
+        error('Failed to update product status. Please try again.', 'Bulk Status Error')
       }
     })
-  } catch (error) {
-    console.error('Error toggling product status:', error)
-    alert('Error updating products. Please try again.')
+  } catch (err) {
+    console.error('Error toggling product status:', err)
+    error('An unexpected error occurred. Please try again.', 'Bulk Status Error')
   }
 }
 
 const deleteProduct = async (productId: number, productName: string) => {
-  if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+  if (!confirm(`Are you sure you want to delete "${productName}"? This action will move the product to trash.`)) {
     return
   }
   
   try {
     await router.delete(`/admin/products/${productId}`, {
+      onSuccess: () => {
+        success(`Product "${productName}" has been moved to trash successfully`, 'Product Deleted')
+      },
       onError: (errors) => {
         console.error('Error deleting product:', errors)
+        error(`Failed to delete product "${productName}". Please try again.`, 'Delete Error')
       }
     })
-  } catch (error) {
-    console.error('Error deleting product:', error)
+  } catch (err) {
+    console.error('Error deleting product:', err)
+    error('An unexpected error occurred. Please try again.', 'Delete Error')
+  }
+}
+
+const restoreProduct = async (productId: number, productName: string) => {
+  try {
+    await router.post(`/admin/products/${productId}/restore`, {}, {
+      onSuccess: () => {
+        success(`Product "${productName}" has been restored successfully`, 'Product Restored')
+      },
+      onError: (errors) => {
+        console.error('Error restoring product:', errors)
+        error(`Failed to restore product "${productName}". Please try again.`, 'Restore Error')
+      }
+    })
+  } catch (err) {
+    console.error('Error restoring product:', err)
+    error('An unexpected error occurred. Please try again.', 'Restore Error')
+  }
+}
+
+const permanentDeleteProduct = async (productId: number, productName: string) => {
+  if (!confirm(`Are you sure you want to permanently delete "${productName}"? This action cannot be undone!`)) {
+    return
+  }
+  
+  try {
+    await router.delete(`/admin/products/${productId}/force-delete`, {
+      onSuccess: () => {
+        success(`Product "${productName}" has been permanently deleted`, 'Product Permanently Deleted')
+      },
+      onError: (errors) => {
+        console.error('Error permanently deleting product:', errors)
+        error(`Failed to permanently delete product "${productName}". Please try again.`, 'Permanent Delete Error')
+      }
+    })
+  } catch (err) {
+    console.error('Error permanently deleting product:', err)
+    error('An unexpected error occurred. Please try again.', 'Permanent Delete Error')
   }
 }
 </script>

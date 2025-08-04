@@ -175,13 +175,18 @@
         <slot />
       </main>
     </div>
+
+    <!-- Notification Container -->
+    <NotificationContainer />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, onMounted, watch } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 import Button from '@/components/ui/button/Button.vue'
+import NotificationContainer from '@/components/ui/notification/NotificationContainer.vue'
+import { useNotifications } from '@/composables/useNotifications'
 
 interface Props {
   title?: string
@@ -191,6 +196,26 @@ defineProps<Props>()
 
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
+const { success, error, warning, info } = useNotifications()
+const page = usePage()
+
+// Handle Laravel flash messages
+watch(() => page.props.flash, (flash) => {
+  if (flash && typeof flash === 'object') {
+    if ('success' in flash && flash.success) {
+      success(flash.success as string, 'Success')
+    }
+    if ('error' in flash && flash.error) {
+      error(flash.error as string, 'Error')
+    }
+    if ('warning' in flash && flash.warning) {
+      warning(flash.warning as string, 'Warning')
+    }
+    if ('info' in flash && flash.info) {
+      info(flash.info as string, 'Info')
+    }
+  }
+}, { immediate: true, deep: true })
 
 // Close menus when clicking outside
 onMounted(() => {

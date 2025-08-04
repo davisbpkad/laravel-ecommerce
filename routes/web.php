@@ -78,11 +78,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Bulk product operations (must be before individual product routes)
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
+    Route::post('/products/bulk-restore', [ProductController::class, 'bulkRestore'])->name('products.bulk-restore');
+    Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForceDelete'])->name('products.bulk-force-delete');
     Route::post('/products/bulk-toggle-status', [ProductController::class, 'bulkToggleStatus'])->name('products.bulk-toggle-status');
     
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-delete');
     
     // Order management
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');

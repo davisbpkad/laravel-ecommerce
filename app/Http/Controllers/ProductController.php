@@ -71,8 +71,16 @@ class ProductController extends Controller
         $search = $request->get('search');
         $category = $request->get('category');
         $status = $request->get('status');
+        $showDeleted = $request->get('show_deleted', false);
 
-        $products = Product::query()
+        $query = Product::query();
+        
+        // Include or exclude soft deleted products
+        if ($showDeleted) {
+            $query = $query->onlyTrashed();
+        }
+
+        $products = $query
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'ilike', "%{$search}%")
                            ->orWhere('description', 'ilike', "%{$search}%");
@@ -104,6 +112,7 @@ class ProductController extends Controller
                 'search' => $search,
                 'category' => $category,
                 'status' => $status,
+                'show_deleted' => $showDeleted,
             ],
         ]);
     }
@@ -134,17 +143,25 @@ class ProductController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imagePath = $image->store('products', 'public');
-            $validated['image'] = '/storage/' . $imagePath;
+        try {
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imagePath = $image->store('products', 'public');
+                $validated['image'] = '/storage/' . $imagePath;
+            }
+
+            Product::create($validated);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Product '{$validated['name']}' has been created successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Product creation error: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create product. Please try again.');
         }
-
-        Product::create($validated);
-
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product created successfully.');
     }
 
     /**
@@ -175,38 +192,100 @@ class ProductController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image if it exists
-            if ($product->image) {
-                $oldImagePath = str_replace('/storage/', '', $product->image);
-                Storage::disk('public')->delete($oldImagePath);
+        try {
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if it exists
+                if ($product->image) {
+                    $oldImagePath = str_replace('/storage/', '', $product->image);
+                    Storage::disk('public')->delete($oldImagePath);
+                }
+                
+                $image = $request->file('image');
+                $imagePath = $image->store('products', 'public');
+                $validated['image'] = '/storage/' . $imagePath;
             }
+
+            $product->update($validated);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Product '{$validated['name']}' has been updated successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Product update error: ' . $e->getMessage());
             
-            $image = $request->file('image');
-            $imagePath = $image->store('products', 'public');
-            $validated['image'] = '/storage/' . $imagePath;
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update product. Please try again.');
         }
-
-        $product->update($validated);
-
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product updated successfully.');
     }
 
     /**
-     * Remove the specified product
+     * Remove the specified product (soft delete)
      */
     public function destroy(Product $product)
     {
-        $product->delete();
+        try {
+            $productName = $product->name;
+            $product->delete(); // This will soft delete
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product deleted successfully.');
+            return redirect()->route('admin.products.index')
+                ->with('success', "Product '{$productName}' has been moved to trash successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Product soft deletion error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Failed to delete product. Please try again.');
+        }
     }
 
     /**
-     * Bulk delete multiple products
+     * Restore a soft deleted product
+     */
+    public function restore($id)
+    {
+        try {
+            $product = Product::onlyTrashed()->findOrFail($id);
+            $product->restore();
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Product '{$product->name}' has been restored successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Product restoration error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Failed to restore product. Please try again.');
+        }
+    }
+
+    /**
+     * Permanently delete a product
+     */
+    public function forceDestroy($id)
+    {
+        try {
+            $product = Product::onlyTrashed()->findOrFail($id);
+            $productName = $product->name;
+            
+            // Delete associated image if it exists
+            if ($product->image) {
+                $imagePath = str_replace('/storage/', '', $product->image);
+                Storage::disk('public')->delete($imagePath);
+            }
+            
+            $product->forceDelete(); // Permanently delete
+
+            return redirect()->route('admin.products.index', ['show_deleted' => true])
+                ->with('success', "Product '{$productName}' has been permanently deleted.");
+        } catch (\Exception $e) {
+            \Log::error('Product permanent deletion error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index', ['show_deleted' => true])
+                ->with('error', 'Failed to permanently delete product. Please try again.');
+        }
+    }
+
+    /**
+     * Bulk delete multiple products (soft delete)
      */
     public function bulkDelete(Request $request)
     {
@@ -227,24 +306,98 @@ class ProductController extends Controller
             $deletedCount = 0;
             
             foreach ($products as $product) {
+                $product->delete(); // Soft delete
+                $deletedCount++;
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Successfully moved {$deletedCount} product(s) to trash.");
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk soft delete error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'An error occurred while deleting products. Please try again.');
+        }
+    }
+
+    /**
+     * Bulk restore multiple soft deleted products
+     */
+    public function bulkRestore(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer',
+        ]);
+
+        try {
+            $productIds = $validated['product_ids'];
+            $products = Product::onlyTrashed()->whereIn('id', $productIds)->get();
+            
+            if ($products->isEmpty()) {
+                return redirect()->route('admin.products.index', ['show_deleted' => true])
+                    ->with('error', 'No deleted products found to restore.');
+            }
+
+            $restoredCount = 0;
+            
+            foreach ($products as $product) {
+                $product->restore();
+                $restoredCount++;
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Successfully restored {$restoredCount} product(s).");
+                
+        } catch (\Exception $e) {
+            \Log::error('Bulk restore error: ' . $e->getMessage());
+            
+            return redirect()->route('admin.products.index', ['show_deleted' => true])
+                ->with('error', 'An error occurred while restoring products. Please try again.');
+        }
+    }
+
+    /**
+     * Bulk permanently delete multiple products
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer',
+        ]);
+
+        try {
+            $productIds = $validated['product_ids'];
+            $products = Product::onlyTrashed()->whereIn('id', $productIds)->get();
+            
+            if ($products->isEmpty()) {
+                return redirect()->route('admin.products.index', ['show_deleted' => true])
+                    ->with('error', 'No deleted products found to permanently delete.');
+            }
+
+            $deletedCount = 0;
+            
+            foreach ($products as $product) {
                 // Delete associated image if it exists
                 if ($product->image) {
                     $imagePath = str_replace('/storage/', '', $product->image);
                     Storage::disk('public')->delete($imagePath);
                 }
                 
-                $product->delete();
+                $product->forceDelete(); // Permanently delete
                 $deletedCount++;
             }
 
-            return redirect()->route('admin.products.index')
-                ->with('success', "Successfully deleted {$deletedCount} product(s).");
+            return redirect()->route('admin.products.index', ['show_deleted' => true])
+                ->with('success', "Successfully permanently deleted {$deletedCount} product(s).");
                 
         } catch (\Exception $e) {
-            \Log::error('Bulk delete error: ' . $e->getMessage());
+            \Log::error('Bulk permanent delete error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index')
-                ->with('error', 'An error occurred while deleting products. Please try again.');
+            return redirect()->route('admin.products.index', ['show_deleted' => true])
+                ->with('error', 'An error occurred while permanently deleting products. Please try again.');
         }
     }
 
