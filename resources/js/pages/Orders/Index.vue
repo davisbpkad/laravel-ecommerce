@@ -46,7 +46,7 @@
                   <div class="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
                     <span>Placed on {{ formatDate(order.created_at) }}</span>
                     <span>•</span>
-                    <span>{{ order.items.length }} {{ order.items.length === 1 ? 'item' : 'items' }}</span>
+                    <span>{{ order.order_items?.length || 0 }} {{ (order.order_items?.length || 0) === 1 ? 'item' : 'items' }}</span>
                   </div>
                 </div>
                 
@@ -55,7 +55,7 @@
                     Rp {{ formatCurrency(order.total_amount) }}
                   </div>
                   <div class="text-sm text-muted-foreground">
-                    {{ order.payment_method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                    {{ order.payment_method?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'N/A' }}
                   </div>
                 </div>
               </div>
@@ -65,7 +65,7 @@
             <div class="p-6">
               <div class="space-y-4">
                 <div 
-                  v-for="item in order.items" 
+                  v-for="item in order.order_items" 
                   :key="item.id"
                   class="flex items-center space-x-4"
                 >
@@ -205,7 +205,7 @@ interface Order {
   total_amount: number
   payment_method: string
   created_at: string
-  items: OrderItem[]
+  order_items: OrderItem[]
 }
 
 interface PaginatedOrders {

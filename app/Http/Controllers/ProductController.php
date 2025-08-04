@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -20,8 +21,8 @@ class ProductController extends Controller
 
         $products = Product::active()
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                           ->orWhere('description', 'like', "%{$search}%");
+                return $query->where('name', 'ilike', "%{$search}%")
+                           ->orWhere('description', 'ilike', "%{$search}%");
             })
             ->when($category, function ($query, $category) {
                 return $query->where('category', $category);
@@ -73,14 +74,19 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                           ->orWhere('description', 'like', "%{$search}%");
+                return $query->where('name', 'ilike', "%{$search}%")
+                           ->orWhere('description', 'ilike', "%{$search}%");
             })
             ->when($category, function ($query, $category) {
                 return $query->where('category', $category);
             })
-            ->when($status !== null, function ($query) use ($status) {
-                return $query->where('is_active', $status);
+            ->when($status !== null && $status !== '', function ($query) use ($status) {
+                if ($status === 'active') {
+                    return $query->where('is_active', true);
+                } elseif ($status === 'inactive') {
+                    return $query->where('is_active', false);
+                }
+                return $query;
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -131,9 +137,8 @@ class ProductController extends Controller
         // Handle image upload
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('storage/products'), $imageName);
-            $validated['image'] = '/storage/products/' . $imageName;
+            $imagePath = $image->store('products', 'public');
+            $validated['image'] = '/storage/' . $imagePath;
         }
 
         Product::create($validated);
@@ -173,14 +178,14 @@ class ProductController extends Controller
         // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image if it exists
-            if ($product->image && file_exists(public_path($product->image))) {
-                unlink(public_path($product->image));
+            if ($product->image) {
+                $oldImagePath = str_replace('/storage/', '', $product->image);
+                Storage::disk('public')->delete($oldImagePath);
             }
             
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('storage/products'), $imageName);
-            $validated['image'] = '/storage/products/' . $imageName;
+            $imagePath = $image->store('products', 'public');
+            $validated['image'] = '/storage/' . $imagePath;
         }
 
         $product->update($validated);

@@ -325,7 +325,9 @@ const submitForm = async () => {
       if (value !== null && value !== '') {
         if (key === 'is_active') {
           formData.append(key, value ? '1' : '0')
-        } else {
+        } else if (key === 'image' && value instanceof File) {
+          formData.append(key, value)
+        } else if (key !== 'image') {
           formData.append(key, value.toString())
         }
       }

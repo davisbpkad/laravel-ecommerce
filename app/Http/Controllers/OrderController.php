@@ -85,48 +85,62 @@ class OrderController extends Controller
             return back()->withErrors(['error' => 'Your cart is empty.']);
         }
 
-        DB::transaction(function () use ($validated, $cartItems) {
-            // Calculate total
-            $total = $cartItems->sum(function ($item) {
-                return $item->quantity * $item->product->price;
-            });
+        // Check stock availability before processing
+        foreach ($cartItems as $cartItem) {
+            if ($cartItem->product->stock < $cartItem->quantity) {
+                return back()->withErrors(['error' => "Insufficient stock for {$cartItem->product->name}."]);
+            }
+        }
 
-            // Create order
-            $order = Order::create([
-                'user_id' => auth()->id(),
-                'order_number' => Order::generateOrderNumber(),
-                'total_amount' => $total,
-                'status' => 'pending',
-                'payment_method' => $validated['payment_method'],
-                'shipping_address' => $validated['shipping_address'],
-                'notes' => $validated['notes'] ?? null,
-            ]);
+        $order = null;
 
-            // Create order items and update stock
-            foreach ($cartItems as $cartItem) {
-                // Check stock again
-                if ($cartItem->product->stock < $cartItem->quantity) {
-                    throw new \Exception("Insufficient stock for {$cartItem->product->name}.");
-                }
+        try {
+            DB::transaction(function () use ($validated, $cartItems, &$order) {
+                // Calculate total
+                $total = $cartItems->sum(function ($item) {
+                    return $item->quantity * $item->product->price;
+                });
 
-                // Create order item
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'quantity' => $cartItem->quantity,
-                    'price' => $cartItem->product->price,
+                // Create order
+                $order = Order::create([
+                    'user_id' => auth()->id(),
+                    'order_number' => Order::generateOrderNumber(),
+                    'total_amount' => $total,
+                    'status' => 'pending',
+                    'payment_method' => $validated['payment_method'],
+                    'shipping_address' => $validated['shipping_address'],
+                    'notes' => $validated['notes'] ?? null,
                 ]);
 
-                // Update product stock
-                $cartItem->product->decrement('stock', $cartItem->quantity);
-            }
+                // Create order items and update stock
+                foreach ($cartItems as $cartItem) {
+                    // Double check stock inside transaction
+                    if ($cartItem->product->stock < $cartItem->quantity) {
+                        throw new \Exception("Insufficient stock for {$cartItem->product->name}.");
+                    }
 
-            // Clear cart
-            Cart::where('user_id', auth()->id())->delete();
-        });
+                    // Create order item
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $cartItem->product_id,
+                        'quantity' => $cartItem->quantity,
+                        'price' => $cartItem->product->price,
+                    ]);
 
-        return redirect()->route('orders.success', ['order' => $order->id])
-            ->with('success', 'Order placed successfully!');
+                    // Update product stock
+                    $cartItem->product->decrement('stock', $cartItem->quantity);
+                }
+
+                // Clear cart
+                Cart::where('user_id', auth()->id())->delete();
+            });
+
+            return redirect()->route('orders.success', ['order' => $order->id])
+                ->with('success', 'Order placed successfully!');
+                
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to process order: ' . $e->getMessage()]);
+        }
     }
 
     /**

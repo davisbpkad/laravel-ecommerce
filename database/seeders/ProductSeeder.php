@@ -20,7 +20,7 @@ class ProductSeeder extends Seeder
                 'price' => 18500000,
                 'stock' => 15,
                 'category' => 'Electronics',
-                'image' => 'laptop-asus-rog.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -29,7 +29,7 @@ class ProductSeeder extends Seeder
                 'price' => 19999000,
                 'stock' => 25,
                 'category' => 'Electronics',
-                'image' => 'iphone-15-pro-max.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -38,7 +38,7 @@ class ProductSeeder extends Seeder
                 'price' => 16999000,
                 'stock' => 20,
                 'category' => 'Electronics',
-                'image' => 'samsung-s24-ultra.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -47,7 +47,7 @@ class ProductSeeder extends Seeder
                 'price' => 16999000,
                 'stock' => 12,
                 'category' => 'Electronics',
-                'image' => 'macbook-air-m3.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -56,7 +56,7 @@ class ProductSeeder extends Seeder
                 'price' => 4999000,
                 'stock' => 30,
                 'category' => 'Audio',
-                'image' => 'sony-wh1000xm5.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -65,7 +65,7 @@ class ProductSeeder extends Seeder
                 'price' => 4299000,
                 'stock' => 18,
                 'category' => 'Gaming',
-                'image' => 'nintendo-switch-oled.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -74,7 +74,7 @@ class ProductSeeder extends Seeder
                 'price' => 14999000,
                 'stock' => 10,
                 'category' => 'Electronics',
-                'image' => 'ipad-pro-m2.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -83,7 +83,7 @@ class ProductSeeder extends Seeder
                 'price' => 1299000,
                 'stock' => 35,
                 'category' => 'Accessories',
-                'image' => 'keychron-k8.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -92,7 +92,7 @@ class ProductSeeder extends Seeder
                 'price' => 1599000,
                 'stock' => 40,
                 'category' => 'Accessories',
-                'image' => 'logitech-mx-master-3s.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
             [
@@ -101,7 +101,7 @@ class ProductSeeder extends Seeder
                 'price' => 5999000,
                 'stock' => 22,
                 'category' => 'Electronics',
-                'image' => 'lg-monitor-27-4k.jpg',
+                'image' => null,
                 'is_active' => true,
             ],
         ];

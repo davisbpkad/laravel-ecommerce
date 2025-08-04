@@ -42,12 +42,9 @@
                 class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All Categories</option>
-                <option value="electronics">Electronics</option>
-                <option value="clothing">Clothing</option>
-                <option value="books">Books</option>
-                <option value="home">Home & Garden</option>
-                <option value="sports">Sports</option>
-                <option value="toys">Toys</option>
+                <option v-for="category in categories" :key="category" :value="category">
+                  {{ category }}
+                </option>
               </select>
             </div>
             
@@ -63,12 +60,23 @@
               </select>
             </div>
             
-            <div class="flex items-end">
-              <Button type="submit" class="w-full">
+            <div class="flex items-end gap-2">
+              <Button type="submit" class="flex-1">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Search
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                class="flex-1"
+                @click="clearFilters"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear
               </Button>
             </div>
           </form>
@@ -246,6 +254,7 @@ interface PaginatedProducts {
 
 interface PageProps {
   products: PaginatedProducts
+  categories: string[]
   filters: {
     search: string
     category: string
@@ -280,7 +289,23 @@ const getStockClass = (stock: number): string => {
 const search = () => {
   router.get('/admin/products', filters.value, {
     preserveState: true,
-    preserveScroll: true
+    preserveScroll: false,
+    replace: true
+  })
+}
+
+const clearFilters = () => {
+  filters.value = {
+    search: '',
+    category: '',
+    status: ''
+  }
+  
+  // Redirect to admin products without any filters
+  router.get('/admin/products', {}, {
+    preserveState: true,
+    preserveScroll: false,
+    replace: true
   })
 }
 
