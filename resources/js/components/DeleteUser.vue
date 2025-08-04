@@ -5,7 +5,7 @@ import { ref } from 'vue';
 // Components
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/ui/button/Button.vue';
 import {
     Dialog,
     DialogClose,
@@ -72,7 +72,7 @@ const closeModal = () => {
 
                         <DialogFooter class="gap-2">
                             <DialogClose as-child>
-                                <Button variant="secondary" @click="closeModal"> Cancel </Button>
+                                <Button variant="neutral" @click="closeModal"> Cancel </Button>
                             </DialogClose>
 
                             <Button type="submit" variant="destructive" :disabled="form.processing"> Delete account </Button>

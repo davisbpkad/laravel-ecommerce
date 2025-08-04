@@ -11,9 +11,5 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('button-demo', function () {
-    return Inertia::render('ButtonDemo');
-})->name('button-demo');
-
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
