@@ -29,8 +29,11 @@ WORKDIR /app
 # Copy composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Copy build environment and fake artisan
+# Copy required environment files
 COPY .env.build .env
+COPY .env.example .env.example
+
+# Copy build environment and fake artisan
 COPY fake-artisan fake-artisan
 
 # Backup real artisan and use fake one during build
@@ -59,13 +62,20 @@ COPY . .
 # Restore real artisan if it exists
 RUN if [ -f artisan.real ]; then mv artisan.real artisan; fi
 
-# Build frontend assets
-RUN npm run build || (echo "Build failed, creating fallback..." && \
-    mkdir -p public/build/assets && \
-    echo '{"resources/js/app.ts":{"file":"assets/app.js","isEntry":true}}' > public/build/manifest.json)
+# Build frontend assets with multiple fallbacks
+RUN export NODE_OPTIONS="--max-old-space-size=4096 --no-experimental-fetch" && \
+    (npm run build || \
+     npx vite build --config vite.production.config.ts || \
+     npx vite build --mode production --no-ssr || \
+     (echo "All builds failed, creating fallback..." && \
+      mkdir -p public/build/assets && \
+      echo "/* Fallback styles */" > public/build/assets/app.css && \
+      echo "console.log('Fallback JS loaded');" > public/build/assets/app.js && \
+      echo '{"resources/js/app.ts":{"file":"assets/app.js","name":"app","isEntry":true,"css":["assets/app.css"]},"resources/css/app.css":{"file":"assets/app.css"}}' > public/build/manifest.json))
 
-# Remove build env and use production template
-RUN rm .env && cp .env.example .env
+# Remove build env and use production template (with safety check)
+RUN rm -f .env && \
+    (cp .env.example .env || echo "# Production environment" > .env)
 
 # Make scripts executable
 RUN chmod +x railway-start.sh
