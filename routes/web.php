@@ -26,17 +26,60 @@ Route::get('/status', function () {
 
 // Debug route to check environment
 Route::get('/debug', function () {
-    return response()->json([
-        'php_version' => phpversion(),
-        'laravel_version' => app()->version(),
-        'environment' => app()->environment(),
-        'database' => config('database.default'),
-        'app_key' => config('app.key') ? 'set' : 'not set',
-        'debug' => config('app.debug'),
-    ]);
+    try {
+        return response()->json([
+            'status' => 'debug info',
+            'php_version' => phpversion(),
+            'laravel_version' => app()->version(),
+            'environment' => app()->environment(),
+            'database' => config('database.default'),
+            'app_key' => config('app.key') ? 'set' : 'not set',
+            'debug' => config('app.debug'),
+            'app_url' => config('app.url'),
+            'db_connection' => config('database.connections.pgsql.host'),
+            'storage_writable' => is_writable(storage_path()),
+            'cache_writable' => is_writable(storage_path('framework/cache')),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
 });
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// Simple test route that should work
+Route::get('/test', function () {
+    return 'Laravel is working!';
+});
+
+// Simple health check route for Railway - NO MIDDLEWARE
+Route::get('/health', function () {
+    return response('OK', 200)
+        ->header('Content-Type', 'text/plain');
+})->name('health');
+
+// Alternative health check routes
+Route::get('/ping', function () {
+    return 'pong';
+});
+
+Route::get('/status', function () {
+    return response()->json(['status' => 'healthy'], 200);
+});
+
+// Temporary simple homepage to avoid errors
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Laravel Ecommerce API',
+        'status' => 'running',
+        'timestamp' => now()->toISOString()
+    ]);
+})->name('home');
+
+// Original homepage (commented out for debugging)
+// Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Public product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
