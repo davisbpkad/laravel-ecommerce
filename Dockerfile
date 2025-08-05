@@ -66,7 +66,7 @@ RUN if [ -f artisan.real ]; then mv artisan.real artisan; fi
 RUN export NODE_OPTIONS="--max-old-space-size=4096 --no-experimental-fetch" && \
     (npm run build || \
      npx vite build --config vite.production.config.ts || \
-     npx vite build --mode production --no-ssr || \
+     npx vite build --mode production || \
      (echo "All builds failed, creating fallback..." && \
       mkdir -p public/build/assets && \
       echo "/* Fallback styles */" > public/build/assets/app.css && \

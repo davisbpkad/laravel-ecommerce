@@ -52,15 +52,19 @@ echo "✅ NPM install successful"
 echo "Building frontend assets..."
 
 # Set Node.js options for compatibility
-export NODE_OPTIONS="--max-old-space-size=4096 --no-experimental-fetch"
+export NODE_OPTIONS="--max-old-space-size=4096"
 
 # Try multiple build approaches
 if npm run build; then
     echo "✅ Frontend build successful with main config"
+elif npm run build:safe 2>/dev/null; then
+    echo "✅ Frontend build successful with safe config"
+elif NODE_OPTIONS="--no-experimental-fetch" npm run build; then
+    echo "✅ Frontend build successful with Node options"
 elif npx vite build --config vite.production.config.ts; then
     echo "✅ Frontend build successful with production config"
-elif npx vite build --mode production --no-ssr; then
-    echo "✅ Frontend build successful without SSR"
+elif npx vite build --mode production; then
+    echo "✅ Frontend build successful in production mode"
 else
     echo "⚠️ All build attempts failed, creating comprehensive fallback..."
     

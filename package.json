@@ -2,7 +2,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "NODE_OPTIONS='--no-experimental-fetch' vite build --mode production",
+        "build": "vite build --mode production",
+        "build:safe": "cross-env NODE_OPTIONS=--no-experimental-fetch vite build --mode production",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
         "format": "prettier --write resources/",
@@ -31,6 +32,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^9.0.1",
+        "cross-env": "^7.0.3",
         "laravel-vite-plugin": "^2.0.0",
         "lucide-vue-next": "^0.468.0",
         "reka-ui": "^2.2.0",
