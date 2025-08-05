@@ -119,4 +119,6 @@ EOF
 fi
 
 chmod +x railway-start.sh
+echo "Menjalankan migration..."
+php artisan migrate --force || true
 echo "✅ Build completed successfully!"
