@@ -9,10 +9,20 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Simple health check route for Railway
+// Simple health check route for Railway - NO MIDDLEWARE
 Route::get('/health', function () {
-    return response()->json(['status' => 'ok'], 200);
+    return response('OK', 200)
+        ->header('Content-Type', 'text/plain');
 })->name('health');
+
+// Alternative health check routes
+Route::get('/ping', function () {
+    return 'pong';
+});
+
+Route::get('/status', function () {
+    return response()->json(['status' => 'healthy'], 200);
+});
 
 // Debug route to check environment
 Route::get('/debug', function () {
