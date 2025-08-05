@@ -55,8 +55,8 @@ const buttonClasses = [
 
 <template>
   <button
-    :type="type"
-    :disabled="disabled"
+    :type="props.type"
+    :disabled="props.disabled"
     :class="buttonClasses"
     v-bind="$attrs"
   >
