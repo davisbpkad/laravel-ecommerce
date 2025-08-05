@@ -20,12 +20,7 @@
               Products
             </Link>
             <div v-if="$page.props.auth.user">
-              <Link href="/cart" class="text-card-foreground hover:text-primary transition-colors relative">
-                🛒 Cart
-                <span v-if="cartCount > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {{ cartCount }}
-                </span>
-              </Link>
+              <CartHover :cart-count="cartCount" />
             </div>
           </div>
 
@@ -181,6 +176,7 @@ import { ref, onMounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { Link } from '@inertiajs/vue3'
 import Button from '@/components/ui/button/Button.vue'
+import CartHover from '@/components/CartHover.vue'
 
 const $page = usePage()
 
@@ -205,11 +201,26 @@ const searchProducts = () => {
 onMounted(async () => {
   if ($page.props.auth.user) {
     try {
-      const response = await fetch('/cart/count')
-      const data = await response.json()
-      cartCount.value = data.count || 0
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      const response = await fetch('/api/cart/count', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': token || '',
+          'Accept': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        cartCount.value = data.count || 0
+      } else {
+        console.error('Failed to fetch cart count:', response.status)
+        cartCount.value = 0
+      }
     } catch (error) {
       console.error('Failed to fetch cart count:', error)
+      cartCount.value = 0
     }
   }
 })

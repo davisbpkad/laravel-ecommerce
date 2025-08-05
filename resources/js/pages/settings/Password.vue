@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { route } from 'ziggy-js';
 
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import Button from '@/components/ui/button/Button.vue';

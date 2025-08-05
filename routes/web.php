@@ -51,6 +51,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/cart/{cart}', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
+    
+    // API routes for cart hover
+    Route::get('/api/cart/items', [\App\Http\Controllers\Api\CartController::class, 'getItems'])->name('api.cart.items');
+    Route::get('/api/cart/count', [\App\Http\Controllers\Api\CartController::class, 'getCount'])->name('api.cart.count');
 });
 
 // Order routes (requires authentication)
@@ -92,6 +96,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('orders.show');
     Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    
+    // Settings
+    Route::redirect('/settings', '/admin/settings/store')->name('settings');
+    Route::get('/settings/store', [App\Http\Controllers\Admin\StoreSettingController::class, 'index'])->name('settings.store');
+    Route::put('/settings/store', [App\Http\Controllers\Admin\StoreSettingController::class, 'update'])->name('settings.store.update');
+    Route::post('/settings/store/upload-image', [App\Http\Controllers\Admin\StoreSettingController::class, 'uploadImage'])->name('settings.store.upload-image');
+    Route::post('/settings/store/reset', [App\Http\Controllers\Admin\StoreSettingController::class, 'reset'])->name('settings.store.reset');
+    
+    Route::get('/settings/profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('settings.profile');
+    Route::put('/settings/profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('settings.profile.update');
+    Route::put('/settings/profile/password', [App\Http\Controllers\Admin\AdminProfileController::class, 'updatePassword'])->name('settings.profile.password');
+    Route::delete('/settings/profile/avatar', [App\Http\Controllers\Admin\AdminProfileController::class, 'removeAvatar'])->name('settings.profile.remove-avatar');
 });
 
 // Demo/Test routes (remove in production)

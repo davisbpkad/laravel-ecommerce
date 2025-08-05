@@ -64,6 +64,65 @@
           </Link>
         </div>
 
+        <!-- Profile Settings Quick Access -->
+        <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-card-foreground">Profile Settings</h2>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Profile Info -->
+            <div class="flex items-center space-x-3 p-4 bg-background border border-border rounded-[5px]">
+              <div class="flex-shrink-0">
+                <div v-if="$page.props.auth.user.avatar" class="w-12 h-12 rounded-full border-2 border-border overflow-hidden">
+                  <img :src="$page.props.auth.user.avatar" :alt="$page.props.auth.user.name" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-12 h-12 rounded-full border-2 border-border bg-muted flex items-center justify-center">
+                  <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-foreground truncate">{{ $page.props.auth.user.name }}</p>
+                <p class="text-xs text-muted-foreground truncate">{{ $page.props.auth.user.email }}</p>
+                <p class="text-xs text-muted-foreground">Member since {{ formatMemberSince($page.props.auth.user.created_at) }}</p>
+              </div>
+            </div>
+
+            <!-- Profile Settings Link -->
+            <button @click="openSettingsModal('profile')" class="flex items-center space-x-3 p-4 bg-background border border-border rounded-[5px] hover:bg-muted/50 transition-colors cursor-pointer text-left w-full">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-[5px] bg-blue-100 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-foreground">Edit Profile</p>
+                <p class="text-xs text-muted-foreground">Update your information</p>
+              </div>
+            </button>
+
+            <!-- Password Settings Link -->
+            <button @click="openSettingsModal('password')" class="flex items-center space-x-3 p-4 bg-background border border-border rounded-[5px] hover:bg-muted/50 transition-colors cursor-pointer text-left w-full">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-[5px] bg-green-100 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-foreground">Change Password</p>
+                <p class="text-xs text-muted-foreground">Update your password</p>
+              </div>
+            </button>
+
+          </div>
+        </div>
+
         <!-- Recent Orders -->
         <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 mb-8">
           <h2 class="text-xl font-semibold text-card-foreground mb-4">Recent Orders</h2>
@@ -150,6 +209,14 @@
           </div>
         </div>
       </div>
+
+      <!-- Settings Modal -->
+      <SettingsModal 
+        :show="showSettingsModal" 
+        :type="modalType" 
+        :user="$page.props.auth.user"
+        @close="closeSettingsModal" 
+      />
     </div>
   </EcommerceLayout>
 </template>
@@ -158,6 +225,7 @@
 import { ref, onMounted, computed } from 'vue'
 import EcommerceLayout from '@/layouts/EcommerceLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
+import SettingsModal from '@/components/SettingsModal.vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
 const $page = usePage()
@@ -188,6 +256,20 @@ const props = withDefaults(defineProps<Props>(), {
   cartItemsCount: 0
 })
 
+// Modal State
+const showSettingsModal = ref(false)
+const modalType = ref<'profile' | 'password' | 'appearance'>('profile')
+
+// Modal Functions
+const openSettingsModal = (type: 'profile' | 'password' | 'appearance') => {
+  modalType.value = type
+  showSettingsModal.value = true
+}
+
+const closeSettingsModal = () => {
+  showSettingsModal.value = false
+}
+
 // Computed properties
 const memberSince = computed(() => {
   const joinDate = new Date($page.props.auth.user?.created_at || Date.now())
@@ -204,6 +286,13 @@ const formatDate = (dateString: string): string => {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
+  })
+}
+
+const formatMemberSince = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'short'
   })
 }
 
