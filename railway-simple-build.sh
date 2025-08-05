@@ -97,7 +97,9 @@ if [ -f .env.example ]; then
     echo "✅ Production environment from .env.example"
 else
     cat > .env << 'EOF'
+APP_NAME=LaravelEcommerce
 APP_ENV=production
+APP_KEY=base64:0ZSRIG07Z4Czv0O04hwe4QVn0DPopc9Ufm0PfomxRVA=
 APP_DEBUG=false
 APP_URL=${RAILWAY_STATIC_URL}
 DB_CONNECTION=pgsql
@@ -106,7 +108,12 @@ DB_PORT=${PGPORT}
 DB_DATABASE=${PGDATABASE}
 DB_USERNAME=${PGUSER}
 DB_PASSWORD=${PGPASSWORD}
+DATABASE_URL=${DATABASE_URL}
 PORT=${PORT}
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+MAIL_MAILER=log
 EOF
     echo "✅ Production environment created"
 fi
