@@ -13,12 +13,32 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Health check route for Railway
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now()->toISOString(),
-        'app' => config('app.name'),
-        'env' => config('app.env')
-    ]);
+    try {
+        // Basic health checks
+        $checks = [
+            'status' => 'ok',
+            'timestamp' => now()->toISOString(),
+            'app' => config('app.name', 'Laravel'),
+            'env' => config('app.env', 'production'),
+            'database' => 'checking...'
+        ];
+        
+        // Test database connection
+        try {
+            \DB::connection()->getPdo();
+            $checks['database'] = 'connected';
+        } catch (\Exception $e) {
+            $checks['database'] = 'disconnected';
+        }
+        
+        return response()->json($checks);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Health check failed',
+            'timestamp' => now()->toISOString()
+        ], 500);
+    }
 })->name('health');
 
 // Public product routes
