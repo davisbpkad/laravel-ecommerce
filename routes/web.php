@@ -15,6 +15,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
+// API routes for public access
+Route::get('/api/products/{id}', [ProductController::class, 'apiShow'])->name('api.products.show');
+
 // Static pages
 Route::get('/about', function () {
     return Inertia::render('About');
@@ -47,14 +50,18 @@ Route::get('dashboard', [DashboardController::class, 'index'])->middleware(['aut
 Route::middleware(['auth'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add');
+    Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::put('/cart/{cart}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cart}', [CartController::class, 'destroy'])->name('cart.destroy');
-    Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
     
-    // API routes for cart hover
+    // API routes for cart hover and operations
     Route::get('/api/cart/items', [\App\Http\Controllers\Api\CartController::class, 'getItems'])->name('api.cart.items');
     Route::get('/api/cart/count', [\App\Http\Controllers\Api\CartController::class, 'getCount'])->name('api.cart.count');
+    Route::post('/api/cart/add', [\App\Http\Controllers\Api\CartController::class, 'add'])->name('api.cart.add');
+    Route::put('/api/cart/update/{id}', [\App\Http\Controllers\Api\CartController::class, 'update'])->name('api.cart.update');
+    Route::delete('/api/cart/remove/{id}', [\App\Http\Controllers\Api\CartController::class, 'remove'])->name('api.cart.remove');
+    Route::delete('/api/cart/clear', [\App\Http\Controllers\Api\CartController::class, 'clear'])->name('api.cart.clear');
 });
 
 // Order routes (requires authentication)

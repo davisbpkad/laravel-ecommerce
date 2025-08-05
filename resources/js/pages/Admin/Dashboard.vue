@@ -165,47 +165,6 @@
           </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="mt-8">
-          <h2 class="text-xl font-semibold text-foreground mb-6">Quick Actions</h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/admin/products/create">
-              <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 text-center hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer">
-                <svg class="w-8 h-8 mx-auto mb-2 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <div class="font-medium text-card-foreground">Add Product</div>
-              </div>
-            </Link>
-
-            <Link href="/admin/orders">
-              <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 text-center hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer">
-                <svg class="w-8 h-8 mx-auto mb-2 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <div class="font-medium text-card-foreground">Manage Orders</div>
-              </div>
-            </Link>
-
-            <Link href="/admin/products">
-              <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 text-center hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer">
-                <svg class="w-8 h-8 mx-auto mb-2 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <div class="font-medium text-card-foreground">Manage Products</div>
-              </div>
-            </Link>
-
-            <Link href="/admin/sales-report">
-              <div class="bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 text-center hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer">
-                <svg class="w-8 h-8 mx-auto mb-2 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 00-2 2z" />
-                </svg>
-                <div class="font-medium text-card-foreground">Sales Report</div>
-              </div>
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   </AdminLayout>

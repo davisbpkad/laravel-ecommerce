@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Product Detail">
+  <EcommerceLayout title="Product Detail">
     <div class="min-h-screen bg-background">
       <!-- Breadcrumb -->
       <div class="bg-card border-b-2 border-border">
@@ -176,13 +176,13 @@
         </div>
       </div>
     </div>
-  </AppLayout>
+  </EcommerceLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue'
+import EcommerceLayout from '@/layouts/EcommerceLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
 import { Link } from '@inertiajs/vue3'
 

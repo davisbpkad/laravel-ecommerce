@@ -18,7 +18,7 @@
       <!-- Invisible bridge area to help with mouse navigation -->
       <div class="absolute -top-2 right-0 w-full h-2 bg-transparent"></div>
       <!-- Loading State -->
-      <div v-if="loading" class="p-4 text-center text-muted-foreground">
+      <div v-if="isLoading" class="p-4 text-center text-muted-foreground">
         <svg class="w-6 h-6 animate-spin mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -106,9 +106,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, Ref, onMounted, watch } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import Button from '@/components/ui/button/Button.vue'
+import { useCart } from '@/composables/useCart'
 
 interface Product {
   id: number
@@ -129,15 +130,42 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const showCartDropdown = ref(false)
-const loading = ref(false)
-const cartItems = ref<CartItem[]>([])
+// Use cart composable
+const { cartItems, cartTotal, isLoading, fetchCartItems, refreshCart, subscribeToCartUpdates } = useCart() as {
+  cartItems: Ref<CartItem[]>
+  cartTotal: Ref<number>
+  isLoading: Ref<boolean>
+  fetchCartItems: () => void
+  refreshCart: () => void
+  subscribeToCartUpdates: (callback: () => void) => () => void
+}
 
-// Computed properties
-const cartTotal = computed(() => {
-  return cartItems.value.reduce((total, item) => {
-    return total + (item.product.price * item.quantity)
-  }, 0)
+const showCartDropdown = ref(false)
+
+// Subscribe to cart updates
+onMounted(() => {
+  const unsubscribe = subscribeToCartUpdates(() => {
+    // Refresh cart data when cart is updated
+    if (showCartDropdown.value) {
+      refreshCart()
+    }
+  })
+  
+  // Cleanup subscription on unmount
+  return unsubscribe
+})
+
+// Watch for cart count changes to refresh items
+watch(() => props.cartCount, (newCount, oldCount) => {
+  if (newCount !== oldCount) {
+    // Clear cached items when count changes
+    cartItems.value = []
+    
+    // If dropdown is open and there are items, refresh
+    if (showCartDropdown.value && newCount > 0) {
+      fetchCartItems()
+    }
+  }
 })
 
 // Methods
@@ -156,7 +184,11 @@ const showCart = () => {
   }
   
   // Show dropdown and fetch items if needed
-  fetchCartItems()
+  if (props.cartCount > 0) {
+    showCartDropdown.value = true
+    // Always refresh data when showing to ensure it's up to date
+    refreshCart()
+  }
 }
 
 // Cancel hide when mouse enters dropdown
@@ -175,42 +207,6 @@ const scheduleHide = () => {
     showCartDropdown.value = false
     hideTimeout = null
   }, 300) // Longer delay for better UX
-}
-
-// Fetch cart items
-const fetchCartItems = async () => {
-  if (props.cartCount === 0) return
-  
-  showCartDropdown.value = true
-  
-  // Don't fetch if already loaded
-  if (cartItems.value.length > 0) return
-  
-  loading.value = true
-  
-  try {
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    const response = await fetch('/api/cart/items', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': token || '',
-        'Accept': 'application/json'
-      }
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    cartItems.value = data.items || []
-  } catch (error) {
-    console.error('Error fetching cart items:', error)
-    cartItems.value = []
-  } finally {
-    loading.value = false
-  }
 }
 
 // Clear timeout if component unmounts

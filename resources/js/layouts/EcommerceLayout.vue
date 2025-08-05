@@ -154,6 +154,7 @@ import { router, usePage } from '@inertiajs/vue3'
 import { Link } from '@inertiajs/vue3'
 import Button from '@/components/ui/button/Button.vue'
 import CartHover from '@/components/CartHover.vue'
+import { useCart } from '@/composables/useCart'
 
 const $page = usePage()
 
@@ -166,7 +167,9 @@ defineProps<Props>()
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
 const searchQuery = ref('')
-const cartCount = ref(0)
+
+// Use cart composable
+const { cartCount, initializeCart, subscribeToCartUpdates } = useCart()
 
 const searchProducts = () => {
   if (searchQuery.value.trim()) {
@@ -174,32 +177,15 @@ const searchProducts = () => {
   }
 }
 
-// Get cart count on mount
+// Initialize cart on mount
 onMounted(async () => {
-  if ($page.props.auth.user) {
-    try {
-      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-      const response = await fetch('/api/cart/count', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': token || '',
-          'Accept': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        cartCount.value = data.count || 0
-      } else {
-        console.error('Failed to fetch cart count:', response.status)
-        cartCount.value = 0
-      }
-    } catch (error) {
-      console.error('Failed to fetch cart count:', error)
-      cartCount.value = 0
-    }
-  }
+  await initializeCart()
+  
+  // Subscribe to cart updates for reactive updates
+  subscribeToCartUpdates(() => {
+    // This will trigger reactivity when cart updates
+    console.log('Cart updated in layout')
+  })
 })
 
 // Close menus when clicking outside
