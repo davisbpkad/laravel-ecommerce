@@ -75,7 +75,7 @@ RUN export NODE_OPTIONS="--max-old-space-size=4096 --no-experimental-fetch" && \
 
 # Remove build env and use production template (with safety check)
 RUN rm -f .env && \
-    (cp .env.example .env || echo "# Production environment" > .env)
+    (cp .env.example .env || echo "APP_ENV=production" > .env)
 
 # Make scripts executable
 RUN chmod +x railway-start.sh
