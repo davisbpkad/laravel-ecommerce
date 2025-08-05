@@ -26,4 +26,17 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+        commonjsOptions: {
+            transformMixedEsModules: true,
+        },
+    },
+    define: {
+        global: 'globalThis',
+    },
 });

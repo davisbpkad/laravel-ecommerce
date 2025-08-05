@@ -1,19 +1,10 @@
 [phases.setup]
-nixPkgs = ["...", "php82", "php82Packages.composer", "nodejs_18", "postgresql"]
-
-[phases.install]
-dependsOn = ["setup"]
-cmds = [
-    "composer install --no-dev --optimize-autoloader",
-    "npm ci",
-    "npm run build"
-]
+nixPkgs = ["...", "php82", "php82Packages.composer", "nodejs_20", "postgresql"]
 
 [phases.build]
-dependsOn = ["install"]
 cmds = [
-    "chmod +x start.sh",
-    "chmod +x railway-start.sh"
+    "chmod +x railway-build.sh",
+    "bash railway-build.sh"
 ]
 
 [start]
