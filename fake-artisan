@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// Fake artisan that does nothing during build
+echo "Artisan disabled during build phase\n";
+exit(0);

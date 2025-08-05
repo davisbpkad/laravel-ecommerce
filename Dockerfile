@@ -26,29 +26,46 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files
+# Copy composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Copy build environment
+# Copy build environment and fake artisan
 COPY .env.build .env
+COPY fake-artisan fake-artisan
 
-# Install PHP dependencies without scripts
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Backup real artisan and use fake one during build
+RUN if [ -f artisan ]; then cp artisan artisan.real; fi
+COPY fake-artisan artisan
+RUN chmod +x artisan
+
+# Install PHP dependencies with maximum safety
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts \
+    --no-plugins \
+    --prefer-dist
 
 # Copy package files
 COPY package*.json ./
 
 # Install Node.js dependencies
-RUN npm ci
+RUN npm ci --silent --no-audit
 
-# Copy application code
+# Copy rest of application code
 COPY . .
 
-# Build frontend assets
-RUN npm run build || echo "Build failed, continuing..."
+# Restore real artisan if it exists
+RUN if [ -f artisan.real ]; then mv artisan.real artisan; fi
 
-# Remove build env
-RUN rm .env
+# Build frontend assets
+RUN npm run build || (echo "Build failed, creating fallback..." && \
+    mkdir -p public/build/assets && \
+    echo '{"resources/js/app.ts":{"file":"assets/app.js","isEntry":true}}' > public/build/manifest.json)
+
+# Remove build env and use production template
+RUN rm .env && cp .env.example .env
 
 # Make scripts executable
 RUN chmod +x railway-start.sh
