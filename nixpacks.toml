@@ -8,4 +8,4 @@ cmds = [
 ]
 
 [start]
-cmd = "bash railway-start.sh"
+cmd = "bash railway-safe-start.sh"

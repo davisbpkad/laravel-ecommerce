@@ -72,14 +72,13 @@ RUN rm -f .env && \
      echo "DB_PORT=\${PGPORT}" >> .env && \
      echo "DB_DATABASE=\${PGDATABASE}" >> .env && \
      echo "DB_USERNAME=\${PGUSER}" >> .env && \
-     echo "DB_PASSWORD=\${PGPASSWORD}" >> .env && \
-     echo "PORT=\${PORT}" >> .env)
+     echo "DB_PASSWORD=\${PGPASSWORD}" >> .env)
 
 # Make scripts executable
-RUN chmod +x railway-start.sh
+RUN chmod +x railway-safe-start.sh
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Command to run the application
-CMD ["bash", "railway-start.sh"]
+CMD ["bash", "railway-safe-start.sh"]
