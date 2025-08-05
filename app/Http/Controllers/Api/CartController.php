@@ -48,11 +48,14 @@ class CartController extends Controller
                 $cartItems = [];
             }
             
-            \Log::info('Returning cart items count: ' . count($cartItems));
+            // Calculate total quantity (not just unique items count)
+            $totalQuantity = collect($cartItems)->sum(fn($item) => $item['quantity']);
+            
+            \Log::info('Returning cart items count: ' . count($cartItems) . ', total quantity: ' . $totalQuantity);
             
             return response()->json([
                 'items' => $cartItems,
-                'count' => count($cartItems),
+                'count' => $totalQuantity, // Use total quantity instead of unique items count
                 'total' => collect($cartItems)->sum(fn($item) => $item['product']['price'] * $item['quantity'])
             ]);
         } catch (\Exception $e) {

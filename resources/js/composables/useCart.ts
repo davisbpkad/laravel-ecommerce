@@ -23,15 +23,16 @@ export function useCart() {
     return () => cartEventListeners.delete(callback)
   }
 
-  // Start polling for cart updates
+  // Start polling for cart updates (less frequent)
   const startPolling = () => {
     if (pollingInterval) return
     
     pollingInterval = setInterval(() => {
       if (page.props.auth?.user) {
-        fetchCartCount()
+        // Silent fetch without emitting events to avoid UI flickering
+        fetchCartCountSilent()
       }
-    }, 30000) // Poll every 30 seconds
+    }, 300000) // Poll every 5 minutes instead of 2 minutes
   }
 
   // Stop polling
@@ -39,6 +40,38 @@ export function useCart() {
     if (pollingInterval) {
       clearInterval(pollingInterval)
       pollingInterval = null
+    }
+  }
+
+  // Fetch cart count from API (silent - no events)
+  const fetchCartCountSilent = async () => {
+    if (!page.props.auth?.user) {
+      cartCount.value = 0
+      return
+    }
+
+    try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      const response = await fetch('/api/cart/count', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': token || '',
+          'Accept': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        cartCount.value = data.count || 0
+        // No event emission for silent fetch
+      } else {
+        console.error('Failed to fetch cart count:', response.status)
+        cartCount.value = 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error)
+      cartCount.value = 0
     }
   }
 
@@ -64,7 +97,7 @@ export function useCart() {
         const data = await response.json()
         cartCount.value = data.count || 0
         
-        // Emit update event after fetching count
+        // Only emit update event when explicitly fetching (not during polling)
         emitCartUpdate()
       } else {
         console.error('Failed to fetch cart count:', response.status)
@@ -100,7 +133,7 @@ export function useCart() {
         cartItems.value = data.items || []
         cartCount.value = data.count || 0
         
-        // Emit update event after fetching
+        // Only emit update event when data actually changes
         emitCartUpdate()
       } else {
         console.error('Failed to fetch cart items:', response.status)
@@ -271,17 +304,16 @@ export function useCart() {
   const initializeCart = async () => {
     if (page.props.auth?.user) {
       await fetchCartCount()
-      startPolling() // Start background polling
+      // Disable polling temporarily for debugging
+      // startPolling() 
     }
   }
 
-  // Refresh cart data (count and items)
+  // Refresh cart data (count and items) - optimized
   const refreshCart = async () => {
     if (page.props.auth?.user) {
-      await Promise.all([
-        fetchCartCount(),
-        fetchCartItems()
-      ])
+      // Only fetch items, which includes count in response
+      await fetchCartItems()
     }
   }
 
@@ -294,6 +326,7 @@ export function useCart() {
     
     // Methods
     fetchCartCount,
+    fetchCartCountSilent,
     fetchCartItems,
     addToCart,
     removeFromCart,

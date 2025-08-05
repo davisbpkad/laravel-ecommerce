@@ -145,9 +145,9 @@ const showCartDropdown = ref(false)
 // Subscribe to cart updates
 onMounted(() => {
   const unsubscribe = subscribeToCartUpdates(() => {
-    // Refresh cart data when cart is updated
-    if (showCartDropdown.value) {
-      refreshCart()
+    // Only refresh cart items if dropdown is shown and we don't already have items
+    if (showCartDropdown.value && cartItems.value.length === 0) {
+      fetchCartItems()
     }
   })
   
@@ -158,12 +158,9 @@ onMounted(() => {
 // Watch for cart count changes to refresh items
 watch(() => props.cartCount, (newCount, oldCount) => {
   if (newCount !== oldCount) {
-    // Clear cached items when count changes
-    cartItems.value = []
-    
-    // If dropdown is open and there are items, refresh
-    if (showCartDropdown.value && newCount > 0) {
-      fetchCartItems()
+    // Only clear cached items when count changes significantly
+    if (Math.abs(newCount - oldCount) > 1 || newCount === 0) {
+      cartItems.value = []
     }
   }
 })
@@ -186,8 +183,11 @@ const showCart = () => {
   // Show dropdown and fetch items if needed
   if (props.cartCount > 0) {
     showCartDropdown.value = true
-    // Always refresh data when showing to ensure it's up to date
-    refreshCart()
+    
+    // Only fetch items if we don't have them cached
+    if (cartItems.value.length === 0) {
+      fetchCartItems()
+    }
   }
 }
 

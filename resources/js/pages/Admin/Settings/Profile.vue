@@ -206,70 +206,7 @@
 
         <!-- Account Information Sidebar -->
         <div class="space-y-6">
-          <!-- Account Stats -->
-          <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
-            <h3 class="text-lg font-semibold text-card-foreground mb-4">Account Information</h3>
-            
-            <div class="space-y-4">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">User ID</span>
-                <span class="text-sm font-medium text-card-foreground">#{{ user.id }}</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">Role</span>
-                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full">
-                  {{ user.role || 'Admin' }}
-                </span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">Member Since</span>
-                <span class="text-sm font-medium text-card-foreground">
-                  {{ new Date(user.created_at).toLocaleDateString() }}
-                </span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">Last Updated</span>
-                <span class="text-sm font-medium text-card-foreground">
-                  {{ new Date(user.updated_at).toLocaleDateString() }}
-                </span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">Email Status</span>
-                <span v-if="user.email_verified_at" class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                  Verified
-                </span>
-                <span v-else class="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                  Unverified
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
-            <h3 class="text-lg font-semibold text-card-foreground mb-4">Quick Actions</h3>
-            
-            <div class="space-y-3">
-              <Button variant="outline" size="sm" class="w-full justify-start" @click="downloadData">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Download My Data
-              </Button>
-              
-              <Button variant="outline" size="sm" class="w-full justify-start" @click="viewActivity">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                View Activity Log
-              </Button>
-            </div>
-          </div>
-
+        
           <!-- Security Notice -->
           <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div class="flex">
