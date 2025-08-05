@@ -8,15 +8,17 @@ check_database() {
     while [ $attempt -le $max_attempts ]; do
         echo "Attempt $attempt: Checking database connectivity..."
         
-        if [ -n "$DATABASE_URL" ]; then
-            # Try using DATABASE_URL if available
-            php artisan tinker --execute="DB::connection()->getPdo();" 2>/dev/null
-        else
-            # Try using individual environment variables
-            php artisan tinker --execute="DB::connection()->getPdo();" 2>/dev/null
-        fi
-        
-        if [ $? -eq 0 ]; then
+        # Try to connect to database
+        if php -r "
+            try {
+                \$pdo = new PDO('pgsql:host=${PGHOST};port=${PGPORT};dbname=${PGDATABASE}', '${PGUSER}', '${PGPASSWORD}');
+                echo 'Database connection successful!';
+                exit(0);
+            } catch (Exception \$e) {
+                echo 'Database connection failed: ' . \$e->getMessage();
+                exit(1);
+            }
+        " 2>/dev/null; then
             echo "Database connection successful!"
             return 0
         fi
@@ -32,6 +34,12 @@ check_database() {
 
 echo "Starting Laravel application..."
 
+# Ensure we have production environment
+if [ ! -f ".env" ]; then
+    echo "No .env file found, copying from .env.example..."
+    cp .env.example .env
+fi
+
 # Check if we're in production and database is required
 if [ "$APP_ENV" = "production" ]; then
     echo "Production environment detected, checking database..."
@@ -43,6 +51,9 @@ if [ "$APP_ENV" = "production" ]; then
         if [ $? -ne 0 ]; then
             echo "Migration failed, but continuing..."
         fi
+        
+        # Run any seeders if needed (optional)
+        # php artisan db:seed --force
     else
         echo "Database check failed, but continuing to start server..."
     fi
@@ -51,9 +62,9 @@ fi
 # Clear any cached config and cache fresh ones
 echo "Optimizing application for production..."
 php artisan config:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || echo "Config cache failed, continuing..."
+php artisan route:cache || echo "Route cache failed, continuing..."
+php artisan view:cache || echo "View cache failed, continuing..."
 
 echo "Starting web server on port $PORT..."
 exec php artisan serve --host=0.0.0.0 --port=$PORT

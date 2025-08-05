@@ -2,12 +2,16 @@
 
 echo "=== Railway Build Script ==="
 
+# Copy build environment
+echo "Setting up build environment..."
+cp .env.build .env
+
 # Set Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=4096"
 
-# Install PHP dependencies
+# Install PHP dependencies WITHOUT running any artisan commands
 echo "Installing PHP dependencies..."
-composer install --no-dev --optimize-autoloader --no-interaction
+composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Install Node.js dependencies (dev dependencies needed for build)
 echo "Installing Node.js dependencies..."
@@ -38,6 +42,10 @@ fi
 
 # Clean up node_modules to save space (optional)
 # rm -rf node_modules
+
+# Remove build env and use production env template
+rm .env
+cp .env.example .env
 
 # Make scripts executable
 chmod +x start.sh
