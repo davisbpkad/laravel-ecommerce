@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" @mouseenter="fetchCartItems" @mouseleave="hideCart">
+  <div class="relative" @mouseenter="showCart" @mouseleave="scheduleHide">
     <!-- Cart Link -->
     <Link href="/cart" class="text-card-foreground hover:text-primary transition-colors relative flex items-center">
       🛒 Cart
@@ -12,9 +12,11 @@
     <div 
       v-show="showCartDropdown && cartCount > 0" 
       class="absolute right-0 top-full mt-2 w-80 bg-card border-2 border-border rounded-[5px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50"
-      @mouseenter="showCartDropdown = true"
-      @mouseleave="hideCart"
+      @mouseenter="cancelHide"
+      @mouseleave="scheduleHide"
     >
+      <!-- Invisible bridge area to help with mouse navigation -->
+      <div class="absolute -top-2 right-0 w-full h-2 bg-transparent"></div>
       <!-- Loading State -->
       <div v-if="loading" class="p-4 text-center text-muted-foreground">
         <svg class="w-6 h-6 animate-spin mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +34,7 @@
         </div>
 
         <!-- Items List -->
-        <div class="p-2">
+        <div class="p-2" @click="cancelHide">
           <div 
             v-for="item in cartItems" 
             :key="item.id" 
@@ -64,7 +66,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="border-t border-border p-4">
+        <div class="border-t border-border p-4" @click="cancelHide">
           <div class="flex items-center justify-between mb-3">
             <span class="font-medium text-card-foreground">Total:</span>
             <span class="text-lg font-bold text-primary">
@@ -87,7 +89,7 @@
       </div>
 
       <!-- Empty Cart -->
-      <div v-else class="p-6 text-center">
+      <div v-else class="p-6 text-center" @click="cancelHide">
         <svg class="w-12 h-12 mx-auto mb-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L5 3H3m4 10v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h10" />
         </svg>
@@ -143,6 +145,39 @@ const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('id-ID').format(amount)
 }
 
+let hideTimeout: number | null = null
+
+// Show cart dropdown and fetch items
+const showCart = () => {
+  // Cancel any pending hide
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
+  
+  // Show dropdown and fetch items if needed
+  fetchCartItems()
+}
+
+// Cancel hide when mouse enters dropdown
+const cancelHide = () => {
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
+}
+
+// Schedule hide with delay
+const scheduleHide = () => {
+  if (hideTimeout) clearTimeout(hideTimeout)
+  
+  hideTimeout = setTimeout(() => {
+    showCartDropdown.value = false
+    hideTimeout = null
+  }, 300) // Longer delay for better UX
+}
+
+// Fetch cart items
 const fetchCartItems = async () => {
   if (props.cartCount === 0) return
   
@@ -178,19 +213,12 @@ const fetchCartItems = async () => {
   }
 }
 
-let hideTimeout: number | null = null
-
-const hideCart = () => {
-  if (hideTimeout) clearTimeout(hideTimeout)
-  
-  hideTimeout = setTimeout(() => {
-    showCartDropdown.value = false
-  }, 200) // Small delay to prevent flickering
-}
-
 // Clear timeout if component unmounts
 import { onUnmounted } from 'vue'
 onUnmounted(() => {
-  if (hideTimeout) clearTimeout(hideTimeout)
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
 })
 </script>

@@ -26,20 +26,7 @@
 
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
-            <!-- Search (Mobile Hidden) -->
-            <div class="hidden lg:block">
-              <form @submit.prevent="searchProducts" class="relative">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Search products..."
-                  class="pl-8 pr-4 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-64"
-                />
-                <svg class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </form>
-            </div>
+          
 
             <!-- Auth Menu -->
             <div v-if="$page.props.auth.user" class="relative">
@@ -98,16 +85,6 @@
             <Link href="/products" class="block py-2 text-card-foreground hover:text-primary transition-colors">
               Products
             </Link>
-            
-            <!-- Mobile Search -->
-            <form @submit.prevent="searchProducts" class="pt-2">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search products..."
-                class="w-full pl-8 pr-4 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </form>
           </div>
         </div>
       </div>

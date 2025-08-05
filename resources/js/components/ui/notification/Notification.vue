@@ -99,7 +99,7 @@ const emit = defineEmits<{
 }>()
 
 const visible = ref(props.visible)
-let timeout: NodeJS.Timeout | null = null
+let timeout: ReturnType<typeof setTimeout> | null = null
 
 const close = () => {
   visible.value = false
