@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "laravelecommerce"
+
+[services.variables]
+APP_ENV = "production"
+APP_DEBUG = "false"
+PHP_VERSION = "8.2"
