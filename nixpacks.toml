@@ -3,8 +3,8 @@ nixPkgs = ["...", "php82", "php82Packages.composer", "nodejs_18"]
 
 [phases.build]
 cmds = [
-    "chmod +x safe-build.sh",
-    "bash safe-build.sh"
+    "chmod +x railway-simple-build.sh",
+    "bash railway-simple-build.sh"
 ]
 
 [start]

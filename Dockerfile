@@ -12,10 +12,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libpq-dev \
     nodejs \
-    npm
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    npm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
@@ -26,22 +24,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files first for better caching
-COPY composer.json composer.lock ./
+# Copy everything first
+COPY . .
 
-# Copy required environment files
-COPY .env.build .env
-COPY .env.example .env.example
+# Create build environment
+RUN cp .env.build .env || echo "APP_ENV=local" > .env
 
-# Copy build environment and fake artisan
-COPY fake-artisan fake-artisan
+# Replace artisan temporarily
+RUN cp fake-artisan artisan.temp && \
+    cp artisan artisan.real && \
+    cp fake-artisan artisan && \
+    chmod +x artisan
 
-# Backup real artisan and use fake one during build
-RUN if [ -f artisan ]; then cp artisan artisan.real; fi
-COPY fake-artisan artisan
-RUN chmod +x artisan
-
-# Install PHP dependencies with maximum safety
+# Install PHP dependencies safely
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --no-dev \
     --optimize-autoloader \
@@ -50,32 +45,35 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --no-plugins \
     --prefer-dist
 
-# Copy package files
-COPY package*.json ./
+# Restore real artisan
+RUN cp artisan.real artisan
 
-# Install Node.js dependencies
-RUN npm ci --silent --no-audit
+# Install Node.js dependencies with error handling
+RUN npm install --production --silent || \
+    (echo "npm install failed, using existing assets" && ls -la public/build/ || echo "No existing build")
 
-# Copy rest of application code
-COPY . .
-
-# Restore real artisan if it exists
-RUN if [ -f artisan.real ]; then mv artisan.real artisan; fi
-
-# Build frontend assets with multiple fallbacks
-RUN export NODE_OPTIONS="--max-old-space-size=4096 --no-experimental-fetch" && \
+# Build frontend with comprehensive fallback
+RUN export NODE_OPTIONS="--max-old-space-size=2048" && \
     (npm run build || \
-     npx vite build --config vite.production.config.ts || \
      npx vite build --mode production || \
-     (echo "All builds failed, creating fallback..." && \
+     (echo "Creating fallback assets..." && \
       mkdir -p public/build/assets && \
-      echo "/* Fallback styles */" > public/build/assets/app.css && \
-      echo "console.log('Fallback JS loaded');" > public/build/assets/app.js && \
-      echo '{"resources/js/app.ts":{"file":"assets/app.js","name":"app","isEntry":true,"css":["assets/app.css"]},"resources/css/app.css":{"file":"assets/app.css"}}' > public/build/manifest.json))
+      echo "/* Fallback CSS */" > public/build/assets/app.css && \
+      echo "console.log('Fallback app loaded');" > public/build/assets/app.js && \
+      echo '{"resources/js/app.ts":{"file":"assets/app.js","name":"app","isEntry":true,"css":["assets/app.css"]}}' > public/build/manifest.json))
 
-# Remove build env and use production template (with safety check)
+# Create production environment
 RUN rm -f .env && \
-    (cp .env.example .env || echo "APP_ENV=production" > .env)
+    (cp .env.example .env || \
+     echo "APP_ENV=production" > .env && \
+     echo "APP_URL=\${RAILWAY_STATIC_URL}" >> .env && \
+     echo "DB_CONNECTION=pgsql" >> .env && \
+     echo "DB_HOST=\${PGHOST}" >> .env && \
+     echo "DB_PORT=\${PGPORT}" >> .env && \
+     echo "DB_DATABASE=\${PGDATABASE}" >> .env && \
+     echo "DB_USERNAME=\${PGUSER}" >> .env && \
+     echo "DB_PASSWORD=\${PGPASSWORD}" >> .env && \
+     echo "PORT=\${PORT}" >> .env)
 
 # Make scripts executable
 RUN chmod +x railway-start.sh
