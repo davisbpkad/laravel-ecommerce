@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["...", "php82", "php82Packages.composer", "nodejs_18"]
+nixPkgs = ["...", "php82", "php82Packages.composer", "nodejs_18", "postgresql"]
 
 [phases.install]
 dependsOn = ["setup"]
@@ -12,10 +12,9 @@ cmds = [
 [phases.build]
 dependsOn = ["install"]
 cmds = [
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
+    "chmod +x start.sh",
+    "chmod +x railway-start.sh"
 ]
 
 [start]
-cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "bash railway-start.sh"
