@@ -9,37 +9,24 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Health check route for Railway
+// Simple health check route for Railway
 Route::get('/health', function () {
-    try {
-        // Basic health checks
-        $checks = [
-            'status' => 'ok',
-            'timestamp' => now()->toISOString(),
-            'app' => config('app.name', 'Laravel'),
-            'env' => config('app.env', 'production'),
-            'database' => 'checking...'
-        ];
-        
-        // Test database connection
-        try {
-            \DB::connection()->getPdo();
-            $checks['database'] = 'connected';
-        } catch (\Exception $e) {
-            $checks['database'] = 'disconnected';
-        }
-        
-        return response()->json($checks);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Health check failed',
-            'timestamp' => now()->toISOString()
-        ], 500);
-    }
+    return response()->json(['status' => 'ok'], 200);
 })->name('health');
+
+// Debug route to check environment
+Route::get('/debug', function () {
+    return response()->json([
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'environment' => app()->environment(),
+        'database' => config('database.default'),
+        'app_key' => config('app.key') ? 'set' : 'not set',
+        'debug' => config('app.debug'),
+    ]);
+});
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Public product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

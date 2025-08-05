@@ -6,7 +6,8 @@ echo "=== Railway Laravel Start ==="
 # Debug environment
 echo "DEBUG: Environment variables:"
 echo "PORT value: '${PORT}'"
-echo "PORT type: $(echo $PORT | wc -c) chars"
+echo "APP_ENV: '${APP_ENV}'"
+echo "DB_CONNECTION: '${DB_CONNECTION:-pgsql}'"
 
 # Clean and validate PORT
 if [ -n "$PORT" ]; then
@@ -27,11 +28,27 @@ fi
 echo "📁 Setting permissions..."
 chmod -R 775 storage bootstrap/cache 2>/dev/null || echo "⚠️ Permission setting skipped"
 
-# Clear caches
+# Setup environment file for Railway
+echo "🔧 Setting up environment..."
+if [ ! -f .env ]; then
+    cp .env.example .env 2>/dev/null || echo "APP_ENV=production" > .env
+fi
+
+# Clear caches to avoid issues
 echo "🧹 Clearing caches..."
 php artisan config:clear 2>/dev/null || echo "⚠️ Config clear skipped"
+php artisan route:clear 2>/dev/null || echo "⚠️ Route clear skipped"
+php artisan view:clear 2>/dev/null || echo "⚠️ View clear skipped"
 
-echo "🚀 Starting Laravel server on 0.0.0.0:$PORT"
+# Test basic PHP functionality
+echo "� Testing PHP..."
+php -v || exit 1
 
-# Start Laravel
-exec php artisan serve --host=0.0.0.0 --port=$PORT
+# Test artisan command
+echo "🔍 Testing artisan..."
+php artisan --version || exit 1
+
+echo "�🚀 Starting Laravel server on 0.0.0.0:$PORT"
+
+# Start Laravel with error output
+exec php artisan serve --host=0.0.0.0 --port=$PORT --verbose
