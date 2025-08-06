@@ -82,6 +82,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/sales-report', [AdminDashboardController::class, 'salesReport'])->name('sales-report');
+    Route::get('/sales-report/generate-monthly', [AdminDashboardController::class, 'generateMonthlyReport'])->name('sales-report.generate-monthly');
+    Route::get('/sales-report/export-monthly', [AdminDashboardController::class, 'exportMonthlyReport'])->name('sales-report.export-monthly');
     
     // Product management
     Route::get('/products', [ProductController::class, 'adminIndex'])->name('admin.products.index');
