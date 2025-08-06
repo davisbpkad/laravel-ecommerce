@@ -1,0 +1,3 @@
+[2025-08-06 08:21:52] local.INFO: CartController@getItems called  
+[2025-08-06 08:21:52] local.INFO: User authenticated: 3  
+[2025-08-06 08:21:52] local.INFO: Returning cart items count: 1, total quantity: 1  

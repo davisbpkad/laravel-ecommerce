@@ -258,14 +258,16 @@
                     <div class="flex items-center space-x-2">
                       <!-- Actions for non-deleted products -->
                       <template v-if="!showDeleted">
-                        <Link :href="`/products/${product.id}`" target="_blank">
-                          <Button variant="outline" size="sm">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </Button>
-                        </Link>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          @click="showProductDetail(product)"
+                        >
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Button>
                         
                         <Link :href="`/admin/products/${product.id}/edit`">
                           <Button variant="outline" size="sm">
@@ -288,6 +290,17 @@
                       
                       <!-- Actions for deleted products -->
                       <template v-else>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          @click="showProductDetail(product)"
+                        >
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Button>
+                        
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -354,6 +367,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Product Detail Modal -->
+    <ProductDetailModal 
+      :is-open="showDetailModal"
+      :product="selectedProduct"
+      @close="closeDetailModal"
+    />
   </AdminLayout>
 </template>
 
@@ -364,6 +384,7 @@ import AdminLayout from '@/layouts/AdminLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
 import { Link } from '@inertiajs/vue3'
 import { useNotifications } from '@/composables/useNotifications'
+import ProductDetailModal from '@/components/modals/ProductDetailModal.vue'
 
 // Define interfaces
 interface Product {
@@ -376,6 +397,11 @@ interface Product {
   sku: string | null
   category: string | null
   is_active: boolean
+  weight?: number
+  dimensions?: string
+  created_at: string
+  updated_at: string
+  deleted_at?: string | null
 }
 
 interface PaginatedProducts {
@@ -415,6 +441,10 @@ const selectedProducts = ref<number[]>([])
 const isDeleting = ref(false)
 const showDeleted = ref(props.filters.show_deleted || false)
 const { success, error } = useNotifications()
+
+// Modal state
+const showDetailModal = ref(false)
+const selectedProduct = ref<Product | null>(null)
 
 // Computed properties
 const isAllSelected = computed(() => {
@@ -657,6 +687,17 @@ const permanentDeleteProduct = async (productId: number, productName: string) =>
     console.error('Error permanently deleting product:', err)
     error('An unexpected error occurred. Please try again.', 'Permanent Delete Error')
   }
+}
+
+// Modal methods
+const showProductDetail = (product: Product) => {
+  selectedProduct.value = product
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedProduct.value = null
 }
 </script>
 

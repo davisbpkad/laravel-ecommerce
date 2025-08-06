@@ -2,7 +2,12 @@
 
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\DashboardController;
+use A    Route::get('/products/{product}', [ProductController::class, 'adminShow'])->name('products.show');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-delete');p\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -83,21 +88,38 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/sales-report', [AdminDashboardController::class, 'salesReport'])->name('sales-report');
     
     // Product management
-    Route::get('/products', [ProductController::class, 'adminIndex'])->name('products.index');
-    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products', [ProductController::class, 'adminIndex'])->name('admin.products.index');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
     
-    // Bulk product operations (must be before individual product routes)
+    // Category management
+    Route::get('/categories', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [\App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [\App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [\App\Http\Controllers\Admin\CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::post('/categories/{category}/toggle-status', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+    
+        // Bulk product operations (must be before individual product routes)
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
     Route::post('/products/bulk-restore', [ProductController::class, 'bulkRestore'])->name('products.bulk-restore');
     Route::post('/products/bulk-force-delete', [ProductController::class, 'bulkForceDelete'])->name('products.bulk-force-delete');
     Route::post('/products/bulk-toggle-status', [ProductController::class, 'bulkToggleStatus'])->name('products.bulk-toggle-status');
     
+    Route::get('/products/{product}', [ProductController::class, 'adminShow'])->name('products.show');
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
     Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-delete');
+    
+    Route::get('/products/{product}', [ProductController::class, 'adminShow'])->name('admin.products.show');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('admin.products.restore');
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('admin.products.force-delete');
     
     // Order management
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
@@ -117,22 +139,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/settings/profile/avatar', [App\Http\Controllers\Admin\AdminProfileController::class, 'removeAvatar'])->name('settings.profile.remove-avatar');
 });
 
-// Demo/Test routes (remove in production)
-Route::get('button-demo', function () {
-    return Inertia::render('ButtonDemo');
-})->name('button-demo');
 
-Route::get('button-test', function () {
-    return Inertia::render('ButtonTest');
-})->name('button-test');
-
-Route::get('simple-button-test', function () {
-    return Inertia::render('SimpleButtonTest');
-})->name('simple-button-test');
-
-Route::get('simple-button-page', function () {
-    return Inertia::render('SimpleButtonPage');
-})->name('simple-button-page');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
