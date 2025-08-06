@@ -121,30 +121,6 @@
                     <span v-if="errors.stock" class="text-sm text-red-600">{{ errors.stock }}</span>
                   </div>
 
-                  <!-- Weight -->
-                  <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-2">Weight (grams)</label>
-                    <input 
-                      v-model="form.weight"
-                      type="number"
-                      min="0"
-                      class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="0"
-                    />
-                    <span v-if="errors.weight" class="text-sm text-red-600">{{ errors.weight }}</span>
-                  </div>
-
-                  <!-- Dimensions -->
-                  <div>
-                    <label class="block text-sm font-medium text-card-foreground mb-2">Dimensions</label>
-                    <input 
-                      v-model="form.dimensions"
-                      type="text"
-                      class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="L x W x H (cm)"
-                    />
-                    <span v-if="errors.dimensions" class="text-sm text-red-600">{{ errors.dimensions }}</span>
-                  </div>
                 </div>
               </div>
 
