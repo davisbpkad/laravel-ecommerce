@@ -72,18 +72,15 @@
                   <div>
                     <label class="block text-sm font-medium text-card-foreground mb-2">Category</label>
                     <select 
-                      v-model="form.category"
+                      v-model="form.category_id"
                       class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="">Select Category</option>
-                      <option value="electronics">Electronics</option>
-                      <option value="clothing">Clothing</option>
-                      <option value="books">Books</option>
-                      <option value="home">Home & Garden</option>
-                      <option value="sports">Sports</option>
-                      <option value="toys">Toys</option>
+                      <option v-for="category in categories" :key="category.id" :value="category.id">
+                        {{ category.name }}
+                      </option>
                     </select>
-                    <span v-if="errors.category" class="text-sm text-red-600">{{ errors.category }}</span>
+                    <span v-if="errors.category_id" class="text-sm text-red-600">{{ errors.category_id }}</span>
                   </div>
                 </div>
               </div>
@@ -263,7 +260,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
@@ -276,18 +273,25 @@ interface PageProps {
   errors: Record<string, any>
 }
 
+interface Category {
+  id: number
+  name: string
+  description?: string
+}
+
 // Define props
 const props = defineProps<PageProps>()
 
 // Reactive data
 const isSubmitting = ref(false)
 const imagePreview = ref<string | null>(null)
+const categories = ref<Category[]>([])
 
 const form = ref({
   name: '',
   description: '',
   sku: '',
-  category: '',
+  category_id: '',
   price: '',
   stock: '',
   weight: '',
@@ -297,6 +301,16 @@ const form = ref({
 })
 
 // Methods
+const loadCategories = async () => {
+  try {
+    const response = await fetch('/api/categories')
+    const result = await response.json()
+    categories.value = result.data
+  } catch (error) {
+    console.error('Failed to load categories:', error)
+  }
+}
+
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -319,6 +333,9 @@ const submitForm = async () => {
   try {
     const formData = new FormData()
     
+    // Debug: log form data before submission
+    console.log('Form data before submission:', form.value)
+    
     // Append all form fields
     Object.keys(form.value).forEach(key => {
       const value = form.value[key as keyof typeof form.value]
@@ -333,9 +350,15 @@ const submitForm = async () => {
       }
     })
     
+    // Debug: log FormData entries
+    for (let [key, value] of formData.entries()) {
+      console.log(`FormData: ${key} = ${value}`)
+    }
+    
     await router.post('/admin/products', formData, {
       forceFormData: true,
       onSuccess: () => {
+        console.log('Product created successfully')
         // Will redirect to products list
       },
       onError: (errors) => {
@@ -353,4 +376,9 @@ const saveAsDraft = async () => {
   form.value.is_active = false
   await submitForm()
 }
+
+// Load categories on component mount
+onMounted(() => {
+  loadCategories()
+})
 </script>

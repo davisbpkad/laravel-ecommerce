@@ -85,6 +85,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/sales-report/generate-monthly', [AdminDashboardController::class, 'generateMonthlyReport'])->name('sales-report.generate-monthly');
     Route::get('/sales-report/export-monthly', [AdminDashboardController::class, 'exportMonthlyReport'])->name('sales-report.export-monthly');
     
+    // Category management
+    Route::get('/categories', function () {
+        return Inertia::render('Admin/Categories/Index');
+    })->name('categories.index');
+    
     // Product management
     Route::get('/products', [ProductController::class, 'adminIndex'])->name('admin.products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');

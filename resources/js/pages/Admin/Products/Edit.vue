@@ -74,18 +74,15 @@
                   <div>
                     <label class="block text-sm font-medium text-card-foreground mb-2">Category</label>
                     <select 
-                      v-model="form.category"
+                      v-model="form.category_id"
                       class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="">Select Category</option>
-                      <option value="electronics">Electronics</option>
-                      <option value="clothing">Clothing</option>
-                      <option value="books">Books</option>
-                      <option value="home">Home & Garden</option>
-                      <option value="sports">Sports</option>
-                      <option value="toys">Toys</option>
+                      <option v-for="category in categories" :key="category.id" :value="category.id">
+                        {{ category.name }}
+                      </option>
                     </select>
-                    <span v-if="errors.category" class="text-sm text-red-600">{{ errors.category }}</span>
+                    <span v-if="errors.category_id" class="text-sm text-red-600">{{ errors.category_id }}</span>
                   </div>
                 </div>
               </div>
@@ -280,7 +277,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
@@ -291,7 +288,7 @@ interface Product {
   name: string
   description: string | null
   sku: string | null
-  category: string | null
+  category_id: number | null
   price: number
   stock: number
   weight: number | null
@@ -300,6 +297,12 @@ interface Product {
   is_active: boolean
   created_at: string
   updated_at: string
+}
+
+interface Category {
+  id: number
+  name: string
+  description?: string
 }
 
 interface PageProps {
@@ -316,12 +319,13 @@ const props = defineProps<PageProps>()
 // Reactive data
 const isSubmitting = ref(false)
 const imagePreview = ref<string | null>(null)
+const categories = ref<Category[]>([])
 
 const form = ref({
   name: props.product.name,
   description: props.product.description || '',
   sku: props.product.sku || '',
-  category: props.product.category || '',
+  category_id: props.product.category_id?.toString() || '',
   price: props.product.price.toString(),
   stock: props.product.stock.toString(),
   weight: props.product.weight?.toString() || '',
@@ -329,6 +333,17 @@ const form = ref({
   image: null as File | null,
   is_active: props.product.is_active
 })
+
+// Methods
+const loadCategories = async () => {
+  try {
+    const response = await fetch('/api/categories')
+    const result = await response.json()
+    categories.value = result.data
+  } catch (error) {
+    console.error('Failed to load categories:', error)
+  }
+}
 
 // Methods
 const formatDate = (dateString: string): string => {
@@ -414,4 +429,9 @@ const deleteProduct = async () => {
     console.error('Error deleting product:', error)
   }
 }
+
+// Load categories on component mount
+onMounted(() => {
+  loadCategories()
+})
 </script>

@@ -42,8 +42,8 @@
                 class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All Categories</option>
-                <option v-for="category in categories" :key="category" :value="category">
-                  {{ category }}
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                   {{ category.name }}
                 </option>
               </select>
             </div>
@@ -231,7 +231,7 @@
                   
                   <!-- Category -->
                   <td class="px-6 py-4">
-                    <span class="text-sm text-card-foreground">{{ product.category || 'Uncategorized' }}</span>
+                    <span class="text-sm text-card-foreground">{{ product.category?.name || 'Uncategorized' }}</span>
                   </td>
                   
                   <!-- Price -->
@@ -395,7 +395,7 @@ interface Product {
   stock: number
   image: string | null
   sku: string | null
-  category: string | null
+  category: Category | null
   is_active: boolean
   weight?: number
   dimensions?: string
@@ -412,9 +412,14 @@ interface PaginatedProducts {
   next_page_url: string | null
 }
 
+interface Category {
+  id: number
+  name: string
+}
+
 interface PageProps {
   products: PaginatedProducts
-  categories: string[]
+  categories: Category[]
   filters: {
     search: string
     category: string

@@ -67,7 +67,7 @@
                 <div>
                   <label class="block text-sm font-medium text-foreground mb-2">Category</label>
                   <div class="w-full px-3 py-2 border-2 border-border rounded-[5px] bg-muted text-foreground">
-                    {{ product.category || 'Uncategorized' }}
+                    {{ product.category?.name || 'Uncategorized' }}
                   </div>
                 </div>
               </div>
@@ -233,6 +233,12 @@ import { Link } from '@inertiajs/vue3'
 import Button from '@/components/ui/button/Button.vue'
 import { onMounted, onUnmounted, watch } from 'vue'
 
+interface Category {
+  id: number
+  name: string
+  description?: string
+}
+
 interface Product {
   id: number
   name: string
@@ -241,7 +247,7 @@ interface Product {
   stock: number
   image: string | null
   sku: string | null
-  category: string | null
+  category: Category | null
   is_active: boolean
   weight?: number
   dimensions?: string

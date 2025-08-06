@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -73,7 +74,7 @@ class ProductController extends Controller
         $status = $request->get('status');
         $showDeleted = $request->get('show_deleted', false);
 
-        $query = Product::query();
+        $query = Product::with('category');
         
         // Include or exclude soft deleted products
         if ($showDeleted) {
@@ -86,7 +87,7 @@ class ProductController extends Controller
                            ->orWhere('description', 'ilike', "%{$search}%");
             })
             ->when($category, function ($query, $category) {
-                return $query->where('category', $category);
+                return $query->where('category_id', $category);
             })
             ->when($status !== null && $status !== '', function ($query) use ($status) {
                 if ($status === 'active') {
@@ -99,11 +100,7 @@ class ProductController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $categories = Product::distinct()
-            ->pluck('category')
-            ->filter()
-            ->sort()
-            ->values();
+        $categories = \App\Models\Category::orderBy('name')->get();
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
@@ -122,7 +119,11 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Products/Create');
+        $categories = \App\Models\Category::orderBy('name')->get();
+        
+        return Inertia::render('Admin/Products/Create', [
+            'categories' => $categories,
+        ]);
     }
 
     /**
@@ -135,7 +136,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'category' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'sku' => 'nullable|string|max:255|unique:products,sku',
             'weight' => 'nullable|numeric|min:0',
             'dimensions' => 'nullable|string|max:255',
@@ -151,12 +152,11 @@ class ProductController extends Controller
                 $validated['image'] = '/storage/' . $imagePath;
             }
 
-            Product::create($validated);
+            $product = Product::create($validated);
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Product '{$validated['name']}' has been created successfully.");
         } catch (\Exception $e) {
-            \Log::error('Product creation error: ' . $e->getMessage());
             
             return redirect()->back()
                 ->withInput()
@@ -169,8 +169,11 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $categories = \App\Models\Category::orderBy('name')->get();
+        
         return Inertia::render('Admin/Products/Edit', [
-            'product' => $product,
+            'product' => $product->load('category'),
+            'categories' => $categories,
         ]);
     }
 
@@ -184,7 +187,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'category' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'sku' => 'nullable|string|max:255|unique:products,sku,' . $product->id,
             'weight' => 'nullable|numeric|min:0',
             'dimensions' => 'nullable|string|max:255',
@@ -208,7 +211,7 @@ class ProductController extends Controller
 
             $product->update($validated);
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Product '{$validated['name']}' has been updated successfully.");
         } catch (\Exception $e) {
             \Log::error('Product update error: ' . $e->getMessage());
@@ -228,12 +231,12 @@ class ProductController extends Controller
             $productName = $product->name;
             $product->delete(); // This will soft delete
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Product '{$productName}' has been moved to trash successfully.");
         } catch (\Exception $e) {
             \Log::error('Product soft deletion error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('error', 'Failed to delete product. Please try again.');
         }
     }
@@ -247,12 +250,12 @@ class ProductController extends Controller
             $product = Product::onlyTrashed()->findOrFail($id);
             $product->restore();
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Product '{$product->name}' has been restored successfully.");
         } catch (\Exception $e) {
             \Log::error('Product restoration error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('error', 'Failed to restore product. Please try again.');
         }
     }
@@ -274,12 +277,12 @@ class ProductController extends Controller
             
             $product->forceDelete(); // Permanently delete
 
-            return redirect()->route('admin.products.index', ['show_deleted' => true])
+            return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                 ->with('success', "Product '{$productName}' has been permanently deleted.");
         } catch (\Exception $e) {
             \Log::error('Product permanent deletion error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index', ['show_deleted' => true])
+            return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                 ->with('error', 'Failed to permanently delete product. Please try again.');
         }
     }
@@ -299,7 +302,7 @@ class ProductController extends Controller
             $products = Product::whereIn('id', $productIds)->get();
             
             if ($products->isEmpty()) {
-                return redirect()->route('admin.products.index')
+                return redirect()->route('admin.admin.products.index')
                     ->with('error', 'No products found to delete.');
             }
 
@@ -310,13 +313,13 @@ class ProductController extends Controller
                 $deletedCount++;
             }
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Successfully moved {$deletedCount} product(s) to trash.");
                 
         } catch (\Exception $e) {
             \Log::error('Bulk soft delete error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('error', 'An error occurred while deleting products. Please try again.');
         }
     }
@@ -336,7 +339,7 @@ class ProductController extends Controller
             $products = Product::onlyTrashed()->whereIn('id', $productIds)->get();
             
             if ($products->isEmpty()) {
-                return redirect()->route('admin.products.index', ['show_deleted' => true])
+                return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                     ->with('error', 'No deleted products found to restore.');
             }
 
@@ -347,13 +350,13 @@ class ProductController extends Controller
                 $restoredCount++;
             }
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Successfully restored {$restoredCount} product(s).");
                 
         } catch (\Exception $e) {
             \Log::error('Bulk restore error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index', ['show_deleted' => true])
+            return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                 ->with('error', 'An error occurred while restoring products. Please try again.');
         }
     }
@@ -373,7 +376,7 @@ class ProductController extends Controller
             $products = Product::onlyTrashed()->whereIn('id', $productIds)->get();
             
             if ($products->isEmpty()) {
-                return redirect()->route('admin.products.index', ['show_deleted' => true])
+                return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                     ->with('error', 'No deleted products found to permanently delete.');
             }
 
@@ -390,13 +393,13 @@ class ProductController extends Controller
                 $deletedCount++;
             }
 
-            return redirect()->route('admin.products.index', ['show_deleted' => true])
+            return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                 ->with('success', "Successfully permanently deleted {$deletedCount} product(s).");
                 
         } catch (\Exception $e) {
             \Log::error('Bulk permanent delete error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index', ['show_deleted' => true])
+            return redirect()->route('admin.admin.products.index', ['show_deleted' => true])
                 ->with('error', 'An error occurred while permanently deleting products. Please try again.');
         }
     }
@@ -416,7 +419,7 @@ class ProductController extends Controller
             $products = Product::whereIn('id', $productIds)->get();
             
             if ($products->isEmpty()) {
-                return redirect()->route('admin.products.index')
+                return redirect()->route('admin.admin.products.index')
                     ->with('error', 'No products found to update.');
             }
 
@@ -427,13 +430,13 @@ class ProductController extends Controller
                 $updatedCount++;
             }
 
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('success', "Successfully updated {$updatedCount} product(s) status.");
                 
         } catch (\Exception $e) {
             \Log::error('Bulk toggle status error: ' . $e->getMessage());
             
-            return redirect()->route('admin.products.index')
+            return redirect()->route('admin.admin.products.index')
                 ->with('error', 'An error occurred while updating product status. Please try again.');
         }
     }

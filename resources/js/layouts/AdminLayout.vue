@@ -7,22 +7,11 @@
           <!-- Logo & Title -->
           <div class="flex items-center space-x-4">
             <Link href="/admin" class="text-xl font-bold text-foreground hover:text-primary transition-colors">
-              🔧 Admin Panel
+              Admin Panel
             </Link>
             <span class="text-sm text-muted-foreground hidden sm:block">E-Commerce Management</span>
           </div>
 
-          <!-- Quick Actions -->
-          <div class="hidden md:flex items-center space-x-4">
-            <Link href="/admin/products/create">
-              <Button variant="default" size="sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Product
-              </Button>
-            </Link>
-          </div>
 
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
@@ -93,6 +82,13 @@
           <div class="mb-6">
             <h3 class="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">Products</h3>
             <nav class="space-y-1">
+              <Link href="/admin/categories" class="flex items-center px-3 py-2 text-card-foreground hover:bg-background rounded-[5px] transition-colors"
+                    :class="{ 'bg-background border border-border': $page.url.includes('/admin/categories') }">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Categories
+              </Link>
               <Link href="/admin/products" class="flex items-center px-3 py-2 text-card-foreground hover:bg-background rounded-[5px] transition-colors"
                     :class="{ 'bg-background border border-border': $page.url.includes('/admin/products') }">
                 <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,6 +144,9 @@
           <nav class="space-y-2">
             <Link href="/admin" class="block py-2 text-card-foreground hover:text-primary transition-colors">
               Dashboard Overview
+            </Link>
+            <Link href="/admin/categories" class="block py-2 text-card-foreground hover:text-primary transition-colors">
+              Categories
             </Link>
             <Link href="/admin/products" class="block py-2 text-card-foreground hover:text-primary transition-colors">
               Products
