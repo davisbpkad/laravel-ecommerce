@@ -18,10 +18,22 @@ commands = [
 
 [phases.deploy]
 commands = [
+  "echo 'Clearing config and cache...'",
   "php artisan config:clear",
   "php artisan cache:clear",
-  "php artisan migrate:fresh --force --seed",
-  "php artisan migrate:status"
+  "php artisan route:clear",
+  "php artisan view:clear",
+  "echo 'Starting database migration...'",
+  "php artisan migrate:fresh --force",
+  "echo 'Migration completed, checking tables...'",
+  "php artisan migrate:status",
+  "echo 'Starting database seeding...'",
+  "php artisan db:seed --force",
+  "echo 'Optimizing application...'",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
+  "echo 'Deployment completed successfully!'"
 ]
 
 [start]

@@ -18,38 +18,53 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
-        // Basic statistics
-        $totalUsers = User::where('role', 'user')->count();
-        $totalProducts = Product::count();
-        $activeProducts = Product::where('is_active', true)->count();
-        $totalOrders = Order::count();
-        $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
+        try {
+            // Basic statistics
+            $totalUsers = User::where('role', 'user')->count();
+            $totalProducts = Product::count();
+            $activeProducts = Product::where('is_active', true)->count();
+            $totalOrders = Order::count();
+            $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
 
-        // Growth calculations (compared to last month)
-        $lastMonthUsers = User::where('role', 'user')
-            ->where('created_at', '<', now()->subMonth())
-            ->count();
-        $lastMonthOrders = Order::where('created_at', '<', now()->subMonth())->count();
-        $lastMonthRevenue = Order::where('status', '!=', 'cancelled')
-            ->where('created_at', '<', now()->subMonth())
-            ->sum('total_amount');
+            // Growth calculations (compared to last month)
+            $lastMonthUsers = User::where('role', 'user')
+                ->where('created_at', '<', now()->subMonth())
+                ->count();
+            $lastMonthOrders = Order::where('created_at', '<', now()->subMonth())->count();
+            $lastMonthRevenue = Order::where('status', '!=', 'cancelled')
+                ->where('created_at', '<', now()->subMonth())
+                ->sum('total_amount');
 
-        $usersGrowth = $lastMonthUsers > 0 ? round((($totalUsers - $lastMonthUsers) / $lastMonthUsers) * 100, 1) : 0;
-        $ordersGrowth = $lastMonthOrders > 0 ? round((($totalOrders - $lastMonthOrders) / $lastMonthOrders) * 100, 1) : 0;
-        $revenueGrowth = $lastMonthRevenue > 0 ? round((($totalRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1) : 0;
+            $usersGrowth = $lastMonthUsers > 0 ? round((($totalUsers - $lastMonthUsers) / $lastMonthUsers) * 100, 1) : 0;
+            $ordersGrowth = $lastMonthOrders > 0 ? round((($totalOrders - $lastMonthOrders) / $lastMonthOrders) * 100, 1) : 0;
+            $revenueGrowth = $lastMonthRevenue > 0 ? round((($totalRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1) : 0;
 
-        // Recent orders
-        $recentOrders = Order::with(['user'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+            // Recent orders
+            $recentOrders = Order::with(['user'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
 
-        // Low stock products
-        $lowStockProducts = Product::where('stock', '<=', 10)
-            ->where('is_active', true)
-            ->orderBy('stock', 'asc')
-            ->limit(5)
-            ->get();
+            // Low stock products
+            $lowStockProducts = Product::where('stock', '<=', 10)
+                ->where('is_active', true)
+                ->orderBy('stock', 'asc')
+                ->limit(5)
+                ->get();
+
+        } catch (\Exception $e) {
+            // If tables don't exist yet (during deployment), use default values
+            $totalUsers = 0;
+            $totalProducts = 0;
+            $activeProducts = 0;
+            $totalOrders = 0;
+            $totalRevenue = 0;
+            $usersGrowth = 0;
+            $ordersGrowth = 0;
+            $revenueGrowth = 0;
+            $recentOrders = collect();
+            $lowStockProducts = collect();
+        }
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
