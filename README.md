@@ -18,7 +18,8 @@ Modern e-commerce application built with Laravel 11, Vue.js 3, TypeScript, and I
 ## ✨ Features
 
 ### 🛍️ Customer Features
-- **Product Browsing**: Browse and search products with filters
+- **Product Browsing**: Browse and search products with category filters
+- **Category Navigation**: Hierarchical category browsing system
 - **Shopping Cart**: Real-time cart updates with hover preview
 - **User Authentication**: Login, register, and profile management
 - **Order Management**: Place orders and track order history
@@ -26,7 +27,8 @@ Modern e-commerce application built with Laravel 11, Vue.js 3, TypeScript, and I
 
 ### 👨‍💼 Admin Features
 - **Dashboard**: Comprehensive analytics and statistics
-- **Product Management**: CRUD operations for products
+- **Product Management**: CRUD operations for products with category assignment
+- **Category Management**: Hierarchical category system with parent-child relationships
 - **Order Management**: View and manage customer orders
 - **User Management**: Manage customer accounts
 - **Sales Reports**: Generate and view sales analytics
@@ -252,6 +254,7 @@ laravel-ecommerce/
 │   │   │   │   └── CartController.php         # Cart API endpoints (add, update, remove, clear)
 │   │   │   ├── Admin/
 │   │   │   │   ├── AdminProfileController.php # Admin profile settings (128 lines)
+│   │   │   │   ├── CategoryController.php     # Category CRUD operations
 │   │   │   │   └── StoreSettingController.php # Store configuration settings
 │   │   │   ├── Auth/
 │   │   │   │   ├── AuthenticatedSessionController.php     # Login/logout (57 lines)
@@ -279,7 +282,8 @@ laravel-ecommerce/
 │   │           └── LoginRequest.php           # Login form validation
 │   ├── Models/
 │   │   ├── User.php                           # User model with relationships (73 lines)
-│   │   ├── Product.php                        # Product model with SoftDeletes (54 lines)
+│   │   ├── Product.php                        # Product model with SoftDeletes & Category (54 lines)
+│   │   ├── Category.php                       # Category model with parent-child relationships
 │   │   ├── Cart.php                           # Cart model with relationships (31 lines) 
 │   │   ├── Order.php                          # Order model with relationships (50 lines)
 │   │   ├── OrderItem.php                      # Order items model (36 lines)
@@ -306,9 +310,25 @@ laravel-ecommerce/
 │   ├── migrations/
 │   │   ├── 0001_01_01_000000_create_users_table.php      # Users table
 │   │   ├── 0001_01_01_000001_create_cache_table.php      # Cache table
-│   │   └── 0001_01_01_000002_create_jobs_table.php       # Jobs table
+│   │   ├── 0001_01_01_000002_create_jobs_table.php       # Jobs table
+│   │   ├── 2025_08_04_065442_create_products_table.php   # Products table
+│   │   ├── 2025_08_04_065512_create_carts_table.php      # Shopping cart table
+│   │   ├── 2025_08_04_065546_create_orders_table.php     # Orders table
+│   │   ├── 2025_08_04_065604_create_order_items_table.php # Order items table
+│   │   ├── 2025_08_04_065727_add_role_to_users_table.php # Add role column to users
+│   │   ├── 2025_08_04_075549_add_product_fields_to_products_table.php # Additional product fields
+│   │   ├── 2025_08_04_142108_add_payment_method_to_orders_table.php # Payment method column
+│   │   ├── 2025_08_04_143554_update_orders_status_enum.php # Order status enum update
+│   │   ├── 2025_08_04_152743_add_soft_deletes_to_products_table.php # Soft deletes for products
+│   │   ├── 2025_08_04_154239_create_store_settings_table.php # Store settings table
+│   │   ├── 2025_08_04_162528_add_profile_fields_to_users_table.php # User profile fields
+│   │   ├── 2025_08_06_030456_create_categories_table.php  # Categories table
+│   │   ├── 2025_08_06_033327_add_category_id_to_products_table.php # Category foreign key
+│   │   └── 2025_08_06_035001_simplify_categories_table.php # Simplified category structure
 │   └── seeders/
-│       └── DatabaseSeeder.php                 # Database seeder
+│       ├── DatabaseSeeder.php                 # Database seeder
+│       ├── UserSeeder.php                     # User data seeder
+│       └── CategorySeeder.php                 # Category data seeder
 ├── public/
 │   ├── index.php                              # Application entry point
 │   ├── favicon.ico                            # Favicon
@@ -361,6 +381,11 @@ laravel-ecommerce/
 │   │   ├── pages/
 │   │   │   ├── Admin/
 │   │   │   │   ├── Dashboard.vue              # Admin dashboard
+│   │   │   │   ├── Categories/
+│   │   │   │   │   ├── Index.vue              # Category management listing
+│   │   │   │   │   ├── Create.vue             # Add new category form
+│   │   │   │   │   ├── Edit.vue               # Edit category form
+│   │   │   │   │   └── Show.vue               # Category details view
 │   │   │   │   ├── Orders/
 │   │   │   │   │   └── Index.vue              # Order management
 │   │   │   │   ├── Products/
@@ -523,6 +548,122 @@ laravel-ecommerce/
 - `SettingsLayout.vue` - User settings pages
 - `AppLayout.vue` - Base application layout
 
+## 🗄️ Database Schema
+
+### Core Tables
+
+#### **Users Table**
+```sql
+users:
+  - id (primary key)
+  - name (string)
+  - email (unique string)
+  - email_verified_at (timestamp)
+  - password (hashed string)
+  - role (enum: 'customer', 'admin')
+  - phone (nullable string)
+  - address (nullable text)
+  - avatar (nullable string)
+  - remember_token (nullable string)
+  - created_at, updated_at (timestamps)
+```
+
+#### **Categories Table** ⭐ **New Feature**
+```sql
+categories:
+  - id (primary key)
+  - name (string)
+  - slug (unique string)
+  - description (nullable text)
+  - parent_id (nullable foreign key to categories.id)
+  - is_active (boolean, default: true)
+  - created_at, updated_at (timestamps)
+  
+  Relationships:
+  - parent: belongsTo(Category)
+  - children: hasMany(Category)
+  - products: hasMany(Product)
+```
+
+#### **Products Table**
+```sql
+products:
+  - id (primary key)
+  - name (string)
+  - slug (unique string)
+  - description (text)
+  - price (decimal 10,2)
+  - image (nullable string)
+  - stock (integer, default: 0)
+  - category_id (nullable foreign key to categories.id) ⭐ **New**
+  - deleted_at (nullable timestamp - soft deletes)
+  - created_at, updated_at (timestamps)
+  
+  Relationships:
+  - category: belongsTo(Category) ⭐ **New**
+  - cartItems: hasMany(Cart)
+  - orderItems: hasMany(OrderItem)
+```
+
+#### **Orders Table**
+```sql
+orders:
+  - id (primary key)
+  - user_id (foreign key to users.id)
+  - total_amount (decimal 10,2)
+  - status (enum: 'pending', 'processing', 'shipped', 'delivered', 'cancelled')
+  - payment_method (enum: 'bank_transfer', 'cod', 'e_wallet')
+  - shipping_address (text)
+  - created_at, updated_at (timestamps)
+  
+  Relationships:
+  - user: belongsTo(User)
+  - items: hasMany(OrderItem)
+```
+
+#### **Order Items Table**
+```sql
+order_items:
+  - id (primary key)
+  - order_id (foreign key to orders.id)
+  - product_id (foreign key to products.id)
+  - quantity (integer)
+  - price (decimal 10,2)
+  - created_at, updated_at (timestamps)
+  
+  Relationships:
+  - order: belongsTo(Order)
+  - product: belongsTo(Product)
+```
+
+#### **Cart Table**
+```sql
+carts:
+  - id (primary key)
+  - user_id (foreign key to users.id)
+  - product_id (foreign key to products.id)
+  - quantity (integer)
+  - created_at, updated_at (timestamps)
+  
+  Relationships:
+  - user: belongsTo(User)
+  - product: belongsTo(Product)
+```
+
+#### **Store Settings Table**
+```sql
+store_settings:
+  - id (primary key)
+  - key (unique string)
+  - value (text)
+  - created_at, updated_at (timestamps)
+```
+
+### System Tables (Laravel)
+- `cache` - Application cache storage
+- `jobs` - Queue jobs for background processing
+- `migrations` - Database migration tracking
+
 **Pages (30+ pages organized):**
 - **Admin**: Dashboard, Products/Index, Products/Create, Products/Edit, Orders/Index, SalesReport, Settings/Profile
 - **Auth**: Login, Register, VerifyEmail, ForgotPassword, ResetPassword, ConfirmPassword
@@ -630,6 +771,14 @@ DELETE /api/cart/clear         # Clear entire cart
 ```
 GET    /api/products           # Get products list
 GET    /api/products/{id}      # Get single product
+GET    /api/products?category={slug}  # Filter products by category
+```
+
+### Categories API ⭐ **New**
+```
+GET    /api/categories         # Get all categories
+GET    /api/categories/active  # Get active categories only
+GET    /api/categories/tree    # Get hierarchical category tree
 ```
 
 ### Admin Routes
@@ -637,6 +786,11 @@ GET    /api/products/{id}      # Get single product
 GET    /admin                  # Admin dashboard
 GET    /admin/products         # Product management
 GET    /admin/orders           # Order management
+GET    /admin/categories       # Category management ⭐ New
+POST   /admin/categories       # Create category
+GET    /admin/categories/{id}/edit  # Edit category form
+PUT    /admin/categories/{id}  # Update category
+DELETE /admin/categories/{id}  # Delete category
 GET    /admin/users            # User management
 GET    /admin/settings         # Settings
 ```
@@ -779,7 +933,67 @@ Enable debug mode in `.env`:
 APP_DEBUG=true
 ```
 
-## 📞 Support
+## � Changelog
+
+### Version 2.1.0 - Category Management System (August 6, 2025) ⭐ **Latest**
+
+#### ✨ New Features
+- **Hierarchical Category System**: Complete parent-child category relationships
+- **Category CRUD Management**: Full admin interface for category management
+- **Product-Category Integration**: Products can now be assigned to categories
+- **Category-based Product Filtering**: Filter products by category in listings
+- **Simplified Category Structure**: Streamlined design focusing on essential fields
+
+#### 🗄️ Database Changes
+- **New Table**: `categories` with parent-child relationships
+- **Enhanced Products**: Added `category_id` foreign key to products table
+- **Simplified Schema**: Removed image and sort_order fields for cleaner structure
+
+#### 🎨 Frontend Updates
+- **Admin Categories Module**: Complete CRUD interface (Index, Create, Edit, Show)
+- **Category Navigation**: Added to admin sidebar
+- **Product Forms**: Category selection dropdown in product management
+- **Vue.js Components**: Responsive category management interface
+
+#### 🔧 Backend Implementation
+- **Category Model**: With parent/children relationships and product associations
+- **CategoryController**: Full resource controller with validation
+- **CategorySeeder**: Sample category data generator
+- **API Endpoints**: Category listing and management routes
+
+#### 📁 File Structure Updates
+```
+app/Models/Category.php                     # New category model
+app/Http/Controllers/Admin/CategoryController.php  # New category controller
+database/migrations/2025_08_06_030456_create_categories_table.php
+database/migrations/2025_08_06_033327_add_category_id_to_products_table.php
+database/migrations/2025_08_06_035001_simplify_categories_table.php
+database/seeders/CategorySeeder.php         # New category seeder
+resources/js/pages/Admin/Categories/        # New Vue.js category pages
+├── Index.vue, Create.vue, Edit.vue, Show.vue
+```
+
+#### 🚀 Migration Guide
+```bash
+# Update to latest version
+git pull origin main
+composer install
+npm install
+php artisan migrate
+php artisan db:seed --class=CategorySeeder
+npm run build
+```
+
+### Version 2.0.0 - E-commerce Foundation
+- Initial e-commerce application
+- User authentication and authorization
+- Product management system
+- Shopping cart functionality
+- Order management
+- Admin dashboard
+- Payment integration
+
+## �📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/davisbpkad/laravel-ecommerce/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/davisbpkad/laravel-ecommerce/discussions)
