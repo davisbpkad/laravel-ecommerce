@@ -1,4 +1,4 @@
-# 🛒 Laravel E-commerce Application 
+# 🛒 Laravel E-commerce Application
 
 A modern, full-featured e-commerce application built with **Laravel 11**, **Vue.js 3**, **TypeScript**, and **Inertia.js**. Features real-time cart functionality, comprehensive admin dashboard, and category management system.
 
