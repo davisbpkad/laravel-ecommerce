@@ -8,7 +8,6 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/js/app.ts'],
-            // ssr: 'resources/js/ssr.ts', // Temporarily disabled for debugging
             refresh: true,
         }),
         tailwindcss(),
@@ -24,21 +23,6 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),
-        },
-    },
-    build: {
-        rollupOptions: {
-            output: {
-                manualChunks: undefined,
-            },
-        },
-        manifest: true,
-        outDir: 'public/build',
-        assetsDir: 'assets',
-    },
-    server: {
-        hmr: {
-            host: 'localhost',
         },
     },
 });

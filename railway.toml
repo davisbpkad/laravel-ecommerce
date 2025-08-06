@@ -9,19 +9,29 @@ builder = "NIXPACKS"
 
 [phases.build]
 commands = [
-    "echo 'Node version:'",
+    "echo '=== Environment Check ==='",
     "node -v",
-    "echo 'NPM version:'", 
     "npm -v",
-    "echo 'Installing PHP dependencies...'",
+    "pwd",
+    "echo '=== Installing PHP dependencies ==='",
     "composer install --no-dev --optimize-autoloader",
-    "echo 'Installing Node dependencies...'",
-    "npm ci",
-    "echo 'Building frontend assets...'",
-    "npm run build",
-    "echo 'Build completed successfully!'",
-    "ls -la public/build/ || echo 'Build directory not found'",
-    "ls -la public/build/assets/ || echo 'Assets directory not found'"
+    "echo '=== Installing Node dependencies ==='",
+    "npm ci --verbose",
+    "echo '=== Checking package.json ==='",
+    "cat package.json",
+    "echo '=== Checking vite.config.ts ==='",
+    "cat vite.config.ts",
+    "echo '=== Clearing previous build ==='",
+    "rm -rf public/build",
+    "echo '=== Running Vite Build with verbose output ==='",
+    "npm run build --verbose",
+    "echo '=== Checking build results ==='",
+    "ls -la public/",
+    "ls -la public/build/ || echo 'ERROR: Build directory not found'",
+    "ls -la public/build/assets/ || echo 'ERROR: Assets directory not found'",
+    "cat public/build/manifest.json || echo 'ERROR: Manifest file not found'",
+    "echo '=== Build process completed ==='",
+    "find public/build -name '*.js' -o -name '*.css' | head -10 || echo 'No built assets found'"
 ]
 
 [phases.deploy]

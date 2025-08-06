@@ -47,16 +47,29 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
         @routes
-        @vite('resources/js/app.ts')
+        {{-- Temporarily disable Vite to test if backend works --}}
+        {{-- @vite('resources/js/app.ts') --}}
+        
+        <!-- Inline basic styles for testing -->
+        <style>
+            body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+            .error { color: red; padding: 10px; background: #fee; border: 1px solid #fcc; border-radius: 4px; }
+            .success { color: green; padding: 10px; background: #efe; border: 1px solid #cfc; border-radius: 4px; }
+        </style>
+        
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
-        <!-- Debug info - remove after fixing -->
-        <div id="debug-info" style="position: fixed; top: 0; left: 0; background: #000; color: #fff; padding: 10px; z-index: 9999; font-size: 12px;">
-            Loading... If you see this, JS is not loading.
+        <div class="container">
+            <h1>Laravel E-commerce - Debug Mode</h1>
+            <div class="success">✅ Laravel is working! Backend connected successfully.</div>
+            <div class="error">❌ Vite assets disabled for debugging. Check Railway build logs.</div>
+            <p>If you see this page, the Laravel backend is working correctly. The issue is with Vite asset compilation.</p>
         </div>
         
-        @inertia
+        {{-- Temporarily disable @inertia while testing --}}
+        {{-- @inertia --}}
         
         <script>
             // Remove debug info when app loads

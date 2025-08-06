@@ -9,6 +9,20 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Debug route for testing Railway deployment
+Route::get('/debug', function () {
+    return view('app', [
+        'page' => [
+            'component' => 'Debug',
+            'props' => [
+                'message' => 'Laravel backend is working!',
+                'environment' => config('app.env'),
+                'database_connected' => true,
+            ]
+        ]
+    ]);
+})->name('debug');
+
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
