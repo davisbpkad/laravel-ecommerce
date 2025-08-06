@@ -178,22 +178,41 @@ npm run build
 
 ## ⚙️ Configuration
 
-### Admin User Setup
-Create an admin user manually:
+### Store Settings Integration (v2.1.0)
+The store name and other settings are now managed via the admin panel and displayed dynamically in the frontend (see `EcommerceLayout.vue`).
 
-```bash
-php artisan tinker
+**How to change store name:**
+- Login as admin, go to Settings > Store Settings, and update the store name.
+- The store name will appear in the navbar and footer automatically.
+
+**Default store name:**
+- If not set, defaults to `E-Shop`.
+
+**Relevant code:**
+```vue
+<Link href="/" class="text-xl font-bold text-foreground hover:text-primary transition-colors">
+    {{ $page.props.store_setting?.store_name || 'E-Shop' }}
+</Link>
 ```
 
-```php
-$user = new App\Models\User();
-$user->name = 'Admin User';
-$user->email = 'admin@example.com';
-$user->password = bcrypt('password');
-$user->role = 'admin';
-$user->email_verified_at = now();
-$user->save();
-```
+**Backend integration:**
+- See `app/Http/Middleware/HandleInertiaRequests.php` for how store settings are shared to all pages.
+
+### Admin & User Credentials (Demo/Test)
+
+Use these credentials for testing the application:
+
+#### Admin
+- **Username:** admin@example.com
+- **Password:** admin123
+
+#### User
+- **Username:** jane@example.com
+- **Password:** password
+- **Username:** john@example.com
+- **Password:** password
+
+You can also create new users via registration page or seeders.
 
 ### File Permissions
 ```bash
@@ -382,10 +401,7 @@ laravel-ecommerce/
 │   │   │   ├── Admin/
 │   │   │   │   ├── Dashboard.vue              # Admin dashboard
 │   │   │   │   ├── Categories/
-│   │   │   │   │   ├── Index.vue              # Category management listing
-│   │   │   │   │   ├── Create.vue             # Add new category form
-│   │   │   │   │   ├── Edit.vue               # Edit category form
-│   │   │   │   │   └── Show.vue               # Category details view
+│   │   │   │   │   └──Index.vue              # Category management listing, Add, Edit
 │   │   │   │   ├── Orders/
 │   │   │   │   │   └── Index.vue              # Order management
 │   │   │   │   ├── Products/
