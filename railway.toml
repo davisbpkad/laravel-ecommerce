@@ -4,16 +4,27 @@ builder = "NIXPACKS"
 [build.env]
   NODE_VERSION = "18"
   PHP_VERSION = "8.2"
+  APP_ENV = "production"
+  ASSET_URL = "https://laravel-ecommerce-production-aa25.up.railway.app"
 
 [phases.build]
 commands = [
+    "echo 'Node version:'",
     "node -v",
-  "composer install --no-dev --optimize-autoloader",
-  "php artisan config:cache",
-  "php artisan route:cache",
-  "npm ci",
-  "export NODE_OPTIONS=--openssl-legacy-provider",
-  "npm run build"
+    "echo 'NPM version:'", 
+    "npm -v",
+    "echo 'Installing PHP dependencies...'",
+    "composer install --no-dev --optimize-autoloader",
+    "echo 'Caching Laravel config...'",
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "echo 'Installing Node dependencies...'",
+    "npm ci",
+    "echo 'Building frontend assets...'",
+    "npm run build",
+    "echo 'Build completed successfully!'",
+    "ls -la public/build/ || echo 'Build directory not found'",
+    "ls -la public/build/assets/ || echo 'Assets directory not found'"
 ]
 
 [phases.deploy]

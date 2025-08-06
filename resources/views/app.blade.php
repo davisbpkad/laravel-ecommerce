@@ -29,6 +29,12 @@
             html.dark {
                 background-color: oklch(0.145 0 0);
             }
+
+            /* Debug style - remove after fixing */
+            body {
+                min-height: 100vh;
+                background-color: #f3f4f6; /* Light gray background for debugging */
+            }
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
@@ -41,10 +47,23 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
         @routes
-        @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
+        @vite('resources/js/app.ts')
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        <!-- Debug info - remove after fixing -->
+        <div id="debug-info" style="position: fixed; top: 0; left: 0; background: #000; color: #fff; padding: 10px; z-index: 9999; font-size: 12px;">
+            Loading... If you see this, JS is not loading.
+        </div>
+        
         @inertia
+        
+        <script>
+            // Remove debug info when app loads
+            setTimeout(function() {
+                const debug = document.getElementById('debug-info');
+                if (debug) debug.remove();
+            }, 3000);
+        </script>
     </body>
 </html>
