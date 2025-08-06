@@ -18,7 +18,10 @@ commands = [
 
 [phases.deploy]
 commands = [
-  "php artisan migrate --force"
+  "php artisan config:clear",
+  "php artisan cache:clear",
+  "php artisan migrate:fresh --force --seed",
+  "php artisan migrate:status"
 ]
 
 [start]
