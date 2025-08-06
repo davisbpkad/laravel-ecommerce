@@ -11,51 +11,7 @@
             <h2 class="text-lg font-semibold text-card-foreground mb-6">Profile Information</h2>
             
             <form @submit.prevent="updateProfile" class="space-y-6">
-              <!-- Avatar Upload -->
-              <div class="flex items-center space-x-6">
-                <div class="relative">
-                  <div class="w-20 h-20 rounded-full bg-muted border-2 border-border overflow-hidden">
-                    <img
-                      v-if="avatarPreview || user.avatar"
-                      :src="avatarPreview || (user.avatar ? `/storage/${user.avatar}` : '')"
-                      :alt="user.name"
-                      class="w-full h-full object-cover"
-                    />
-                    <div v-else class="w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-xl font-semibold">
-                      {{ user.name.charAt(0).toUpperCase() }}
-                    </div>
-                  </div>
-                  <button
-                    v-if="user.avatar"
-                    type="button"
-                    @click="removeAvatar"
-                    class="absolute -top-1 -right-1 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs hover:bg-destructive/90"
-                  >
-                    ×
-                  </button>
-                </div>
-                
-                <div class="flex-1">
-                  <input
-                    ref="avatarInput"
-                    type="file"
-                    accept="image/*"
-                    @change="handleAvatarUpload"
-                    class="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    @click="avatarInput?.click()"
-                  >
-                    Upload Avatar
-                  </Button>
-                  <p class="text-xs text-muted-foreground mt-1">
-                    JPG, PNG or GIF, max 2MB
-                  </p>
-                </div>
-              </div>
-
+              
               <!-- Form Fields -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
