@@ -36,18 +36,26 @@ commands = [
 
 [phases.deploy]
 commands = [
-  "echo 'Starting database migration...'",
-  "php artisan migrate:fresh --force",
-  "echo 'Migration completed, checking tables...'",
+  "echo '=== DEBUGGING DATABASE CONNECTION ==='",
+  "php artisan env",
+  "echo '=== DATABASE CONFIG ==='",
+  "php artisan config:show database",
+  "echo '=== TESTING DATABASE CONNECTION ==='",
+  "php artisan tinker --execute=\"try { \\Illuminate\\Support\\Facades\\DB::connection()->getPdo(); echo 'Database connected successfully!'; } catch(Exception \\$e) { echo 'Database connection failed: ' . \\$e->getMessage(); }\"",
+  "echo '=== RUNNING MIGRATION WITH VERBOSE OUTPUT ==='",
+  "php artisan migrate:fresh --force --verbose",
+  "echo '=== CHECKING MIGRATION STATUS ==='",
   "php artisan migrate:status",
-  "echo 'Starting database seeding...'",
-  "php artisan db:seed --force",
-  "echo 'Optimizing application for production...'",
+  "echo '=== LISTING ALL TABLES ==='",
+  "php artisan tinker --execute=\"echo 'Database tables: ' . implode(', ', \\Illuminate\\Support\\Facades\\Schema::getTableListing());\"",
+  "echo '=== RUNNING SEEDING ==='",
+  "php artisan db:seed --force --verbose",
+  "echo '=== VERIFYING USER TABLE ==='",
+  "php artisan tinker --execute=\"echo 'Users count: ' . \\App\\Models\\User::count();\"",
+  "echo '=== OPTIMIZING APPLICATION ==='",
   "php artisan config:cache",
   "php artisan route:cache",
   "php artisan view:cache",
-  "echo 'Testing database connection...'",
-  "php artisan tinker --execute=\"echo 'Database tables: ' . implode(', ', \\Illuminate\\Support\\Facades\\Schema::getTableListing());\"",
   "echo 'Deployment completed successfully!'"
 ]
 
