@@ -2,12 +2,7 @@
 
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\CartController;
-use A    Route::get('/products/{product}', [ProductController::class, 'adminShow'])->name('products.show');
-    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-delete');p\Controllers\DashboardController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
