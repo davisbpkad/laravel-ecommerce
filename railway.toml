@@ -14,7 +14,7 @@ commands = [
   "npm ci",
   "export NODE_OPTIONS=--openssl-legacy-provider",
   "npm run build"
-
+]
 
 [phases.deploy]
 commands = [
