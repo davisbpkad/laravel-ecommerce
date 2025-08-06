@@ -5,16 +5,12 @@ builder = "NIXPACKS"
   NODE_VERSION = "20"
   PHP_VERSION = "8.2"
 
-[phases.setup]
-commands = [
-  "composer install --no-dev --optimize-autoloader"
-]
-
 [phases.build]
 commands = [
+  "composer install --no-dev --optimize-autoloader",
   "php artisan config:cache",
   "php artisan route:cache",
-  "npm install",
+  "npm ci",
   "export NODE_OPTIONS=--openssl-legacy-provider",
   "npm run build"
 ]
