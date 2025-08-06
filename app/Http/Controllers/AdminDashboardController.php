@@ -87,56 +87,70 @@ class AdminDashboardController extends Controller
      */
     public function salesReport(Request $request)
     {
-        $dateFrom = $request->get('date_from', now()->subMonth()->format('Y-m-d'));
-        $dateTo = $request->get('date_to', now()->format('Y-m-d'));
-        $type = $request->get('type', 'monthly');
+        try {
+            $dateFrom = $request->get('date_from', now()->subMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+            $type = $request->get('type', 'monthly');
 
-        // Sales summary
-        $totalSales = Order::whereBetween('created_at', [$dateFrom, $dateTo])
-            ->where('status', '!=', 'cancelled')
-            ->sum('total_amount');
+            // Sales summary
+            $totalSales = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+                ->where('status', '!=', 'cancelled')
+                ->sum('total_amount');
 
-        $totalOrders = Order::whereBetween('created_at', [$dateFrom, $dateTo])
-            ->where('status', '!=', 'cancelled')
-            ->count();
+            $totalOrders = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+                ->where('status', '!=', 'cancelled')
+                ->count();
 
-        $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
+            $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
 
-        $totalCustomers = Order::whereBetween('created_at', [$dateFrom, $dateTo])
-            ->where('status', '!=', 'cancelled')
-            ->distinct('user_id')
-            ->count();
+            $totalCustomers = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+                ->where('status', '!=', 'cancelled')
+                ->distinct('user_id')
+                ->count();
 
-        // Top products in period
-        $topProducts = Product::select(
-                'products.id',
-                'products.name',
-                'products.image',
-                DB::raw('SUM(order_items.quantity) as sales_count'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
-            )
-            ->join('order_items', 'products.id', '=', 'order_items.product_id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
-            ->where('orders.status', '!=', 'cancelled')
-            ->groupBy('products.id', 'products.name', 'products.image')
-            ->orderBy('sales_count', 'desc')
-            ->limit(5)
-            ->get();
+            // Top products in period
+            $topProducts = Product::select(
+                    'products.id',
+                    'products.name',
+                    'products.image',
+                    DB::raw('SUM(order_items.quantity) as sales_count'),
+                    DB::raw('SUM(order_items.quantity * order_items.price) as revenue')
+                )
+                ->join('order_items', 'products.id', '=', 'order_items.product_id')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
+                ->where('orders.status', '!=', 'cancelled')
+                ->groupBy('products.id', 'products.name', 'products.image')
+                ->orderBy('sales_count', 'desc')
+                ->limit(5)
+                ->get();
 
-        // Payment methods distribution
-        $paymentMethods = Order::whereBetween('created_at', [$dateFrom, $dateTo])
-            ->where('status', '!=', 'cancelled')
-            ->select('payment_method', DB::raw('COUNT(*) as count'))
-            ->groupBy('payment_method')
-            ->get()
-            ->map(function ($item) use ($totalOrders) {
-                return [
-                    'method' => $item->payment_method,
-                    'count' => $item->count,
-                    'percentage' => $totalOrders > 0 ? round(($item->count / $totalOrders) * 100, 1) : 0
-                ];
-            });
+            // Payment methods distribution
+            $paymentMethods = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+                ->where('status', '!=', 'cancelled')
+                ->select('payment_method', DB::raw('COUNT(*) as count'))
+                ->groupBy('payment_method')
+                ->get()
+                ->map(function ($item) use ($totalOrders) {
+                    return [
+                        'method' => $item->payment_method,
+                        'count' => $item->count,
+                        'percentage' => $totalOrders > 0 ? round(($item->count / $totalOrders) * 100, 1) : 0
+                    ];
+                });
+
+        } catch (\Exception $e) {
+            // If tables don't exist yet (during deployment), use default values
+            $totalSales = 0;
+            $totalOrders = 0;
+            $averageOrderValue = 0;
+            $totalCustomers = 0;
+            $topProducts = collect();
+            $paymentMethods = collect();
+            $dateFrom = $request->get('date_from', now()->subMonth()->format('Y-m-d'));
+            $dateTo = $request->get('date_to', now()->format('Y-m-d'));
+            $type = $request->get('type', 'monthly');
+        }
 
         return Inertia::render('Admin/SalesReport', [
             'report' => [
@@ -216,66 +230,79 @@ class AdminDashboardController extends Controller
      */
     private function getMonthlyReportData($startDate, $endDate)
     {
-        // Total sales for the month
-        $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->sum('total_amount');
+        try {
+            // Total sales for the month
+            $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', 'cancelled')
+                ->sum('total_amount');
 
-        // Total orders for the month
-        $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->count();
+            // Total orders for the month
+            $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', 'cancelled')
+                ->count();
 
-        // Average order value
-        $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
+            // Average order value
+            $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
 
-        // Total customers
-        $totalCustomers = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->distinct('user_id')
-            ->count();
+            // Total customers
+            $totalCustomers = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', 'cancelled')
+                ->distinct('user_id')
+                ->count();
 
-        // Daily sales breakdown for the month
-        $dailySales = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('COUNT(*) as orders_count'),
-                DB::raw('SUM(total_amount) as daily_sales')
-            )
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date')
-            ->get();
+            // Daily sales breakdown for the month
+            $dailySales = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', 'cancelled')
+                ->select(
+                    DB::raw('DATE(created_at) as date'),
+                    DB::raw('COUNT(*) as orders_count'),
+                    DB::raw('SUM(total_amount) as daily_sales')
+                )
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->orderBy('date')
+                ->get();
 
-        // Top products for the month
-        $topProducts = Product::select(
-                'products.id',
-                'products.name',
-                'products.category',
-                'products.price',
-                DB::raw('SUM(order_items.quantity) as total_sold'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue')
-            )
-            ->join('order_items', 'products.id', '=', 'order_items.product_id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->where('orders.status', '!=', 'cancelled')
-            ->groupBy('products.id', 'products.name', 'products.category', 'products.price')
-            ->orderBy('total_sold', 'desc')
-            ->get();
+            // Top products for the month
+            $topProducts = Product::select(
+                    'products.id',
+                    'products.name',
+                    'products.category',
+                    'products.price',
+                    DB::raw('SUM(order_items.quantity) as total_sold'),
+                    DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue')
+                )
+                ->join('order_items', 'products.id', '=', 'order_items.product_id')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->whereBetween('orders.created_at', [$startDate, $endDate])
+                ->where('orders.status', '!=', 'cancelled')
+                ->groupBy('products.id', 'products.name', 'products.category', 'products.price')
+                ->orderBy('total_sold', 'desc')
+                ->get();
 
-        // Payment methods breakdown
-        $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled')
-            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total_amount'))
-            ->groupBy('payment_method')
-            ->get();
+            // Payment methods breakdown
+            $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', 'cancelled')
+                ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total_amount'))
+                ->groupBy('payment_method')
+                ->get();
 
-        // Order status breakdown
-        $orderStatus = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->select('status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status')
-            ->get();
+            // Order status breakdown
+            $orderStatus = Order::whereBetween('created_at', [$startDate, $endDate])
+                ->select('status', DB::raw('COUNT(*) as count'))
+                ->groupBy('status')
+                ->get();
+
+        } catch (\Exception $e) {
+            // If tables don't exist yet (during deployment), use default values
+            $totalSales = 0;
+            $totalOrders = 0;
+            $averageOrderValue = 0;
+            $totalCustomers = 0;
+            $dailySales = collect();
+            $topProducts = collect();
+            $paymentMethods = collect();
+            $orderStatus = collect();
+        }
 
         return [
             'summary' => [

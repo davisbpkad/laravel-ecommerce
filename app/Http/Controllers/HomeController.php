@@ -18,29 +18,40 @@ class HomeController extends Controller
             return redirect()->route('admin.dashboard');
         }
         
-        // For guests and regular users, show products catalog
-        $search = $request->get('search');
-        $category = $request->get('category');
-        $sort = $request->get('sort', 'name');
-        $direction = $request->get('direction', 'asc');
+        try {
+            // For guests and regular users, show products catalog
+            $search = $request->get('search');
+            $category = $request->get('category');
+            $sort = $request->get('sort', 'name');
+            $direction = $request->get('direction', 'asc');
 
-        $products = Product::active()
-            ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                           ->orWhere('description', 'like', "%{$search}%");
-            })
-            ->when($category, function ($query, $category) {
-                return $query->where('category', $category);
-            })
-            ->orderBy($sort, $direction)
-            ->paginate(12);
+            $products = Product::active()
+                ->when($search, function ($query, $search) {
+                    return $query->where('name', 'like', "%{$search}%")
+                               ->orWhere('description', 'like', "%{$search}%");
+                })
+                ->when($category, function ($query, $category) {
+                    return $query->where('category', $category);
+                })
+                ->orderBy($sort, $direction)
+                ->paginate(12);
 
-        $categories = Product::active()
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->sort()
-            ->values();
+            $categories = Product::active()
+                ->distinct()
+                ->pluck('category')
+                ->filter()
+                ->sort()
+                ->values();
+
+        } catch (\Exception $e) {
+            // If tables don't exist yet (during deployment), use default values
+            $search = $request->get('search');
+            $category = $request->get('category');
+            $sort = $request->get('sort', 'name');
+            $direction = $request->get('direction', 'asc');
+            $products = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 12);
+            $categories = collect();
+        }
 
         return Inertia::render('Products/Index', [
             'products' => $products,

@@ -33,6 +33,8 @@ commands = [
   "php artisan config:cache",
   "php artisan route:cache",
   "php artisan view:cache",
+  "echo 'Testing database connection...'",
+  "php artisan tinker --execute=\"echo 'Database tables: ' . implode(', ', \\Illuminate\\Support\\Facades\\Schema::getTableListing());\"",
   "echo 'Deployment completed successfully!'"
 ]
 
