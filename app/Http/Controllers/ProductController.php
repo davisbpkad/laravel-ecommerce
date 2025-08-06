@@ -444,4 +444,78 @@ class ProductController extends Controller
                 ->with('error', 'An error occurred while updating product status. Please try again.');
         }
     }
+
+    /**
+     * Optimize image for database storage
+     */
+    private function optimizeImage($file)
+    {
+        $path = $file->getRealPath();
+        $mimeType = $file->getMimeType();
+        
+        // Load image based on type
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $image = imagecreatefromjpeg($path);
+                break;
+            case 'image/png':
+                $image = imagecreatefrompng($path);
+                break;
+            case 'image/gif':
+                $image = imagecreatefromgif($path);
+                break;
+            case 'image/webp':
+                $image = imagecreatefromwebp($path);
+                break;
+            default:
+                // If not supported, return original
+                return file_get_contents($path);
+        }
+
+        if (!$image) {
+            return file_get_contents($path);
+        }
+
+        // Get original dimensions
+        $originalWidth = imagesx($image);
+        $originalHeight = imagesy($image);
+
+        // Calculate new dimensions (max 800px width)
+        $maxWidth = 800;
+        $ratio = $originalWidth / $originalHeight;
+        
+        if ($originalWidth > $maxWidth) {
+            $newWidth = $maxWidth;
+            $newHeight = $maxWidth / $ratio;
+        } else {
+            $newWidth = $originalWidth;
+            $newHeight = $originalHeight;
+        }
+
+        // Create resized image
+        $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency for PNG
+        if ($mimeType === 'image/png') {
+            imagealphablending($resizedImage, false);
+            imagesavealpha($resizedImage, true);
+            $transparent = imagecolorallocatealpha($resizedImage, 255, 255, 255, 127);
+            imagefilledrectangle($resizedImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Resize image
+        imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+
+        // Convert to JPEG for smaller size
+        ob_start();
+        imagejpeg($resizedImage, null, 85); // 85% quality
+        $optimizedData = ob_get_contents();
+        ob_end_clean();
+
+        // Clean up
+        imagedestroy($image);
+        imagedestroy($resizedImage);
+
+        return $optimizedData;
+    }
 }
