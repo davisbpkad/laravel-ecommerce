@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [build.env]
-  NODE_VERSION = "22.17.0"
+  NODE_VERSION = "20"
   PHP_VERSION = "8.2"
 
 [phases.setup]
