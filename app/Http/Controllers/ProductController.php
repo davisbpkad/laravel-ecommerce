@@ -145,11 +145,16 @@ class ProductController extends Controller
         ]);
 
         try {
-            // Handle image upload
+            // Handle image upload - Store as base64 for Railway
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imagePath = $image->store('products', 'public');
-                $validated['image'] = '/storage/' . $imagePath;
+                
+                // Convert to base64 for Railway persistence
+                $imageData = base64_encode(file_get_contents($image->getRealPath()));
+                $mimeType = $image->getMimeType();
+                
+                // Store as data URL
+                $validated['image'] = "data:{$mimeType};base64,{$imageData}";
             }
 
             $product = Product::create($validated);
@@ -196,17 +201,16 @@ class ProductController extends Controller
         ]);
 
         try {
-            // Handle image upload
+            // Handle image upload - Store as base64 for Railway
             if ($request->hasFile('image')) {
-                // Delete old image if it exists
-                if ($product->image) {
-                    $oldImagePath = str_replace('/storage/', '', $product->image);
-                    Storage::disk('public')->delete($oldImagePath);
-                }
-                
                 $image = $request->file('image');
-                $imagePath = $image->store('products', 'public');
-                $validated['image'] = '/storage/' . $imagePath;
+                
+                // Convert to base64 for Railway persistence
+                $imageData = base64_encode(file_get_contents($image->getRealPath()));
+                $mimeType = $image->getMimeType();
+                
+                // Store as data URL
+                $validated['image'] = "data:{$mimeType};base64,{$imageData}";
             }
 
             $product->update($validated);
