@@ -52,9 +52,9 @@
     </head>
     <body class="font-sans antialiased">
         <!-- Debug info - will be removed by JS if loading -->
-        <div id="debug-info" style="position: fixed; top: 0; left: 0; background: #000; color: #fff; padding: 10px; z-index: 9999; font-size: 12px;">
+<!--         <div id="debug-info" style="position: fixed; top: 0; left: 0; background: #000; color: #fff; padding: 10px; z-index: 9999; font-size: 12px;">
             Loading Vite assets... If this persists, check console.
-        </div>
+        </div> -->
         
         @inertia
         
